@@ -1,0 +1,102 @@
+package configs
+
+import (
+	"fmt"
+	"github.com/fsnotify/fsnotify"
+	"github.com/spf13/viper"
+	"log"
+	"os"
+)
+
+type DatabaseConfig struct {
+	Username string `yaml:"username"`
+	Password string `yaml:"password"`
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	Dbname   string `yaml:"dbname"`
+}
+
+type ServerConfig struct {
+	Port int `yaml:"port"`
+}
+
+type ApiConfig struct {
+	Prefix string `yaml:"prefix"`
+}
+
+// JWT 配置结构体
+type JWTConfig struct {
+	SecretKey      string `yaml:"secretKey"`      // JWT 的密钥
+	ExpirationTime string `yaml:"expirationTime"` // JWT 的过期时间
+	Issuer         string `yaml:"issuer"`         // JWT 的发行者
+	Audience       string `yaml:"audience"`       // JWT 的受众
+}
+
+type RedisConfig struct {
+	Host         string `yaml:"host"`
+	Port         int    `yaml:"port"`
+	Password     string `yaml:"password"`
+	DB           int    `yaml:"db"`
+	PoolSize     int    `yaml:"poolSize"`
+	MinIdleConns int    `yaml:"minIdleConns"`
+	DialTimeout  string `yaml:"dialTimeout"`
+	ReadTimeout  string `yaml:"readTimeout"`
+	WriteTimeout string `yaml:"writeTimeout"`
+}
+
+// Config 配置结构体 整个文件
+type Config struct {
+	Server   ServerConfig   `yaml:"server"`
+	Database DatabaseConfig `yaml:"database"`
+	Api      ApiConfig      `yaml:"api"`
+	Jwt      JWTConfig      `yaml:"jwt"`
+	Redis    RedisConfig    `yaml:"redis"`
+}
+
+var appConfigPath = "configs"
+var AppConfig *Config
+
+// LoadConfig 加载配置文件，根据环境选择加载不同的配置文件
+func LoadConfig() error {
+	//重置配置
+	AppConfig = &Config{}
+	// 获取环境变量，如果没有设置则默认为 "dev"
+	env := os.Getenv("APP_ENV")
+	if env != "" {
+		// 加载环境特定的配置文件
+		viper.SetConfigName(fmt.Sprintf("app.%s", env)) // 根据环境变量加载不同的配置文件
+	}
+
+	// 加载默认的配置文件 app.yaml app.dev.yaml app.prod.yaml app.test.yaml
+	viper.SetConfigName("app")         // 默认的配置文件
+	viper.AddConfigPath(appConfigPath) // 配置文件所在路径
+	viper.SetConfigType("yaml")        // 配置文件类型
+
+	// 读取配置文件
+	if err := viper.ReadInConfig(); err != nil {
+		return fmt.Errorf("Error loading config file: %v", err)
+	}
+
+	if err := viper.Unmarshal(AppConfig); err != nil {
+		return fmt.Errorf("Unable to unmarshal config: %v", err)
+	}
+	// 设置监听配置文件变化
+	viper.WatchConfig()
+
+	// 配置文件变化时的回调函数
+	viper.OnConfigChange(func(e fsnotify.Event) {
+		fmt.Println("Config file changed:", e.Name)
+
+		// 重新加载配置文件
+		err := LoadConfig()
+		if err != nil {
+			log.Printf("Error reloading config: %v", err)
+			return
+		}
+
+		// 输出更新后的配置
+		fmt.Printf("Updated config: %+v\n", AppConfig)
+	})
+
+	return nil
+}
