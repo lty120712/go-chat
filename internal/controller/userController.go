@@ -19,7 +19,7 @@ type UserController struct {
 // @Tags user
 // @Accept json
 // @Produce json
-// @Success 200 {object} model.Response
+// @Success 200 {object} model.Response "成功"
 // @Router /user/ping [get]
 func (con UserController) Ping(c *gin.Context) {
 	// 调用服务层获取数据
@@ -35,8 +35,8 @@ func (con UserController) Ping(c *gin.Context) {
 // @Produce json
 // @Param username body string true "用户名"
 // @Param password body string true "密码"
-// @Success 200 {object} model.Response
-// @Failure 400 {object} model.Response
+// @Success 200 {object} model.Response "成功"
+// @Failure 400 {object} model.Response "请求参数错误"
 // @Router /user/register [post]
 func (con UserController) Register(c *gin.Context) {
 	// 此处应实现注册逻辑
@@ -79,8 +79,8 @@ func (con UserController) Login(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param body body map[string]interface{} true "用户信息"
-// @Success 200 {string} string "You are authenticated!"
-// @Failure 401 {string} string "Unauthorized"
+// @Success 200 {string} string "成功"
+// @Failure 401 {string} string "未授权"
 // @Router /user/update_info [post]
 func (con UserController) UpdateInfo(c *gin.Context) {
 	con.Success(c)

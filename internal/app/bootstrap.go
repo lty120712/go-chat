@@ -10,6 +10,7 @@ import (
 	_ "go-chat/docs"
 	apiv1 "go-chat/internal/api/v1"
 	"go-chat/internal/db"
+	"go-chat/internal/manager"
 )
 
 func Start() {
@@ -30,6 +31,8 @@ func Start() {
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	//配置路由
 	apiv1.InitRouter(router)
+	//配置rabbitmq
+	manager.InitRabbitMQ()
 	//启动服务
 	router.Run(fmt.Sprintf(":%d", configs.AppConfig.Server.Port))
 }

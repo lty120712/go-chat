@@ -27,3 +27,23 @@ jwt:
   expirationTime: 24h            # JWT 的过期时间，可以设置为具体时间，例如：1h, 24h, 7d等
   issuer: go-chat-app          # JWT 的发行者
   audience: go-chat-audience    # JWT 的受众，通常是你的应用
+
+rate:
+  userLimit: 10
+  apiLimit: 100
+
+rabbitmq:
+  host: 8.137.38.55
+  port: 5672
+  username: lty
+  password: lty0712
+
+mq:
+  - exchange: chat-exchange
+    queue: string-queue
+    routingKey: string
+    handler: HandleString
+  - exchange: chat-exchange
+    queue: json-queue
+    routingKey: json
+    handler: HandleJson

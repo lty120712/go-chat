@@ -44,6 +44,25 @@ type RedisConfig struct {
 	WriteTimeout string `yaml:"writeTimeout"`
 }
 
+type RateConfig struct {
+	UserLimit int `yaml:"userLimit"`
+	ApiLimit  int `yaml:"apiLimit"`
+}
+
+type RabbitmqConfig struct {
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	Username string `yaml:"username"`
+	Password string `yaml:"password"`
+}
+
+type MqConfig struct {
+	Exchange   string `yaml:"exchange"`
+	Queue      string `yaml:"queue"`
+	RoutingKey string `yaml:"routingKey"`
+	Handler    string `yaml:"handler"`
+}
+
 // Config 配置结构体 整个文件
 type Config struct {
 	Server   ServerConfig   `yaml:"server"`
@@ -51,6 +70,9 @@ type Config struct {
 	Api      ApiConfig      `yaml:"api"`
 	Jwt      JWTConfig      `yaml:"jwt"`
 	Redis    RedisConfig    `yaml:"redis"`
+	Rate     RateConfig     `yaml:"rate"`
+	Rabbitmq RabbitmqConfig `yaml:"rabbitmq"`
+	Mq       []MqConfig     `yaml:"mq"`
 }
 
 var appConfigPath = "configs"

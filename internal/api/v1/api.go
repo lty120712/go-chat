@@ -12,6 +12,7 @@ func InitRouter(r *gin.Engine) {
 	DoMiddlewares(r)
 	//配置控制器的路由
 	UserApi(r)
+	MessageApi(r)
 }
 
 func UserApi(r *gin.Engine) {
@@ -21,5 +22,14 @@ func UserApi(r *gin.Engine) {
 		userApi.POST("/register", controllers.UserController{}.Register)
 		userApi.POST("/login", controllers.UserController{}.Login)
 		userApi.POST("/update_info", middleware.AuthMiddleware(), controllers.UserController{}.UpdateInfo)
+	}
+}
+
+func MessageApi(r *gin.Engine) {
+	messageApi := r.Group(configs.AppConfig.Api.Prefix + "/message")
+	{
+		//测试rabbitmq
+		messageApi.POST("/send/string", controllers.MessageController{}.SendString)
+		messageApi.POST("/send/json", controllers.MessageController{}.SendJson)
 	}
 }
