@@ -5,7 +5,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// 处理队列 "message" 的消息逻辑
+// 处理队列 "string" 的消息逻辑
 func HandleStringConsumer(msg []byte) {
 	message := string(msg)
 	logrus.Printf("处理 message 队列的消息: %s", message)

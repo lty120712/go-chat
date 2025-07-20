@@ -3,8 +3,8 @@ package manager
 import (
 	"encoding/json"
 	"fmt"
+	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/sirupsen/logrus"
-	"github.com/streadway/amqp"
 	"go-chat/configs"
 	"go-chat/internal/consumer"
 )

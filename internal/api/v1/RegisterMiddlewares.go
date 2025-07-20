@@ -5,7 +5,7 @@ import (
 	"go-chat/internal/middleware"
 )
 
-func DoMiddlewares(r *gin.Engine) {
+func RegisterMiddlewares(r *gin.Engine) {
 	// 添加中间件
 	// r.Use(middleware.Cors())
 	// 用户限流

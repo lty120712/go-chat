@@ -9,7 +9,7 @@ import (
 
 func InitRouter(r *gin.Engine) {
 	//配置路由中间件
-	DoMiddlewares(r)
+	RegisterMiddlewares(r)
 	//配置控制器的路由
 	UserApi(r)
 	MessageApi(r)
