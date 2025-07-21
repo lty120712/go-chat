@@ -33,10 +33,10 @@ rate:
   apiLimit: 100
 
 #rabbitmq:
-#  host: 8.137.38.55
+#  host: yourhost
 #  port: 5672
-#  username: lty
-#  password: lty0712
+#  username: username
+#  password: password
 #
 #mq:
 #  - exchange: chat-exchange
