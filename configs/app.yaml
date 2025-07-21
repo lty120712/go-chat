@@ -6,7 +6,7 @@ database:
   password: lty120712
   host: localhost
   port: 3306
-  dbname: game
+  dbname: go-chat
 
 redis:
   host: localhost    # Redis 主机地址
@@ -32,18 +32,18 @@ rate:
   userLimit: 10
   apiLimit: 100
 
-rabbitmq:
-  host: 8.137.38.55
-  port: 5672
-  username: lty
-  password: lty0712
-
-mq:
-  - exchange: chat-exchange
-    queue: string-queue
-    routingKey: string
-    handler: HandleString
-  - exchange: chat-exchange
-    queue: json-queue
-    routingKey: json
-    handler: HandleJson
+#rabbitmq:
+#  host: 8.137.38.55
+#  port: 5672
+#  username: lty
+#  password: lty0712
+#
+#mq:
+#  - exchange: chat-exchange
+#    queue: string-queue
+#    routingKey: string
+#    handler: HandleString
+#  - exchange: chat-exchange
+#    queue: json-queue
+#    routingKey: json
+#    handler: HandleJson

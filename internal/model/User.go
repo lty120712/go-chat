@@ -1,21 +1,25 @@
 package model
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+)
 
 type User struct {
 	gorm.Model
-	Username      string
-	Password      string
-	Phone         string
-	Email         string
-	Identity      string
-	ClientIp      string
-	ClientPort    string
-	LoginTime     string
-	HeartbeatTime uint64
-	LogoutTIme    uint64
-	IsLogout      int32
-	DeviceInfo    string
+	Username      string `json:"username"`         // 用户名
+	Password      string `json:"password"`         // 用户密码（加密后）
+	Nickname      string `json:"nickname"`         // 昵称
+	Phone         string `json:"phone"`            // 用户手机号
+	Email         string `json:"email"`            // 用户邮箱
+	Avatar        string `json:"avatar,omitempty"` // 用户头像URL（可选）
+	ClientIp      string `json:"client_ip"`        // 客户端IP地址
+	ClientPort    string `json:"client_port"`      // 客户端端口号
+	LoginTime     int64  `json:"login_time"`       // 最近一次登录时间
+	HeartbeatTime int64  `json:"heartbeat_time"`   // 最近一次心跳时间
+	LogoutTime    int64  `json:"logout_time"`      // 最近一次登出时间
+	Status        uint32 `json:"status"`           // 用户状态（如激活、禁用等）
+	OnlineStatus  uint32 `json:"online_status"`    // 用户在线状态（如在线、离线、忙碌等）
+	DeviceInfo    string `json:"device_info"`      // 客户端设备信息
 }
 
 func (u *User) TableName() string {

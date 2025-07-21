@@ -39,7 +39,18 @@ func (con UserController) Ping(c *gin.Context) {
 // @Failure 400 {object} model.Response "请求参数错误"
 // @Router /user/register [post]
 func (con UserController) Register(c *gin.Context) {
-	// 此处应实现注册逻辑
+	registerRequest := &model.RegisterRequest{}
+	if err := c.ShouldBindBodyWithJSON(registerRequest); err != nil {
+		con.Error(c, "params error")
+		return
+	}
+	userService := service.GetUserService()
+	if err := userService.Register(registerRequest.Username, registerRequest.Password, registerRequest.RePassword); err != nil {
+		con.Error(c, err.Error())
+		return
+	}
+	con.Success(c)
+	return
 }
 
 // Login 用户登录接口
@@ -53,25 +64,22 @@ func (con UserController) Register(c *gin.Context) {
 // @Failure 401 {object} model.Response "登陆失败"
 // @Router /user/login [post]
 func (con UserController) Login(c *gin.Context) {
-	//1.先获取参数
 	loginRequest := &model.LoginRequest{}
 	if err := c.ShouldBindBodyWithJSON(loginRequest); err != nil {
 		con.Error(c, "参数错误")
 		return
 	}
-	//2.调用服务
 	userService := service.GetUserService()
 	token, err := userService.Login(loginRequest.Username, loginRequest.Password)
 	if err != nil {
 		con.Error(c, err.Error())
 		return
 	}
-	//3.返回结果
 	con.Success(c, token)
 	return
 }
 
-// UpdateInfo 用户更新信息接口
+// Update 用户更新信息接口
 // @Summary 更新用户信息
 // @Description 需要登录
 // @security Bearer
@@ -81,7 +89,17 @@ func (con UserController) Login(c *gin.Context) {
 // @Param body body map[string]interface{} true "用户信息"
 // @Success 200 {string} string "成功"
 // @Failure 401 {string} string "未授权"
-// @Router /user/update_info [post]
-func (con UserController) UpdateInfo(c *gin.Context) {
+// @Router /user/update [post]
+func (con UserController) Update(c *gin.Context) {
+	updateRequest := &model.UserUpdateRequest{}
+	if err := c.ShouldBindBodyWithJSON(&updateRequest); err != nil {
+		con.Error(c, "参数错误")
+		return
+	}
+	userService := service.GetUserService()
+	if err := userService.UpdateUser(updateRequest.ID, updateRequest.Nickname, updateRequest.Avatar, updateRequest.Phone, updateRequest.Email); err != nil {
+		con.Error(c, err)
+		return
+	}
 	con.Success(c)
 }

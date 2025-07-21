@@ -37,7 +37,7 @@ func (_ *BaseController) Error(c *gin.Context, data ...interface{}) {
 	case 0:
 		break
 	case 1:
-		response.Code = http.StatusInsufficientStorage
+		response.Code = http.StatusInternalServerError
 		if msg, ok := data[0].(string); ok {
 			response.Message = msg
 		} else {

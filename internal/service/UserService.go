@@ -2,9 +2,12 @@ package service
 
 import (
 	"errors"
+	"fmt"
+	models "go-chat/internal/model"
 	"go-chat/internal/repository"
 	"go-chat/internal/utils"
-	"gorm.io/gorm"
+	"go-chat/internal/utils/logUtil"
+	"golang.org/x/crypto/bcrypt"
 	"sync"
 )
 
@@ -27,9 +30,32 @@ func GetUserService() *UserService {
 	return userServiceInstance
 }
 
-func (u *UserService) Register(username, password, rePassword string) (ok bool, err error) {
-	//进行一系列操作后得到user然后 调用repository
-	return true, nil
+// Register 注册
+func (u *UserService) Register(username, password, rePassword string) (err error) {
+	if password != rePassword {
+		return errors.New("密码不一致")
+	}
+	userRepository := repository.GetUserRepository()
+	user, err := userRepository.GetByName(username)
+	if err != nil {
+		logUtil.Errorf("GetUserByName error: %v", err)
+		return err
+	}
+	if user != nil {
+		logUtil.Warnf("用户(%v)已存在", username)
+		return errors.New(fmt.Sprintf("用户(%v)已存在", username))
+	}
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	user = &models.User{Username: username, Password: string(hashedPassword), Nickname: username}
+	err = userRepository.Save(user)
+	if err != nil {
+		logUtil.Errorf("保存用户失败: %v", err)
+		return err
+	}
+	return nil
 }
 
 func (u *UserService) Login(username, password string) (token string, err error) {
@@ -37,13 +63,14 @@ func (u *UserService) Login(username, password string) (token string, err error)
 	userRepository := repository.GetUserRepository()
 	user, err := userRepository.GetByName(username)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return "", errors.New("用户不存在")
-		}
 		return "", err
 	}
-	if utils.IsZero(user) {
-		return "", errors.New("用户不存在")
+	if user == nil {
+		return "", errors.New("用户名或密码错误")
+	}
+	//验证密码
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+		return "", errors.New("用户名或密码错误")
 	}
 	//jwt 返回
 	token, err = utils.GenerateJWT(user.ID)
@@ -51,4 +78,8 @@ func (u *UserService) Login(username, password string) (token string, err error)
 		return "", err
 	}
 	return token, nil
+}
+
+func (u *UserService) UpdateUser(id uint, nickname string, avatar string, phone string, email string) error {
+	return errors.New("未实现")
 }

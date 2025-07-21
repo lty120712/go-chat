@@ -1,8 +1,10 @@
 package repository
 
 import (
+	"errors"
 	"go-chat/internal/db"
 	models "go-chat/internal/model"
+	"gorm.io/gorm"
 	"sync"
 )
 
@@ -29,10 +31,13 @@ func (r *UserRepository) GetById(id int) (user *models.User, err error) {
 }
 
 // GetByName 根据用户名查询用户
-func (r *UserRepository) GetByName(username string) (user *models.User, err error) {
-	user = &models.User{}
-	err = db.Mysql.Where("username = ?", username).First(user).Error
-	return
+func (r *UserRepository) GetByName(username string) (*models.User, error) {
+	user := &models.User{}
+	err := db.Mysql.Where("username = ?", username).First(user).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	return user, err
 }
 
 // Save 保存用户

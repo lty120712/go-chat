@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	amqp "github.com/rabbitmq/amqp091-go"
-	"github.com/sirupsen/logrus"
 	"go-chat/configs"
 	"go-chat/internal/consumer"
+	"go-chat/internal/utils/logUtil"
 )
 
 type RabbitMQManager struct {
@@ -29,8 +29,8 @@ func InitRabbitMQ() {
 		rabbitmqConfig.Host,
 		rabbitmqConfig.Port))
 	if err != nil {
-		logrus.Error("rabbitmq 启动失败:", err)
-
+		logUtil.Errorf("rabbitmq 启动失败: %s", err)
+		return
 	}
 	// 创建发送消息的通道
 	RabbitClient.sendCh, err = RabbitClient.conn.Channel()
@@ -46,7 +46,7 @@ func (rmq *RabbitMQManager) SendMessage(exchange, routingKey interface{}, messag
 	// 将消息体序列化为 JSON 字节数组
 	body, err := json.Marshal(message)
 	if err != nil {
-		logrus.Error("消息序列化失败: %s", err)
+		logUtil.Errorf("消息序列化失败: %s", err)
 		return err
 	}
 
@@ -64,10 +64,10 @@ func (rmq *RabbitMQManager) SendMessage(exchange, routingKey interface{}, messag
 
 	// 错误检查与重试机制（示例）
 	if err != nil {
-		logrus.Error("消息发送失败: %s", err)
+		logUtil.Errorf("消息发送失败: %s", err)
 		return err
 	}
-	logrus.Info("消息发送成功")
+	logUtil.Infof("消息发送成功")
 	return nil
 }
 
@@ -80,7 +80,7 @@ func startConsumers() {
 func runConsumer(exchange, routingKey, queueName string, handler func([]byte)) {
 	err := registerConsumer(exchange, routingKey, queueName, handler)
 	if err != nil {
-		logrus.Error("消费者(%v)注册失败: %s", exchange+"-"+routingKey+"-"+queueName, err)
+		logUtil.Errorf("消费者(%v)注册失败: %s", exchange+"-"+routingKey+"-"+queueName, err)
 	}
 }
 
@@ -97,7 +97,7 @@ func registerConsumer(exchange, routingKey, queueName string, messageHandler fun
 		nil,      // 额外参数
 	)
 	if err != nil {
-		logrus.Error("交换机声明失败: %s", err)
+		logUtil.Errorf("交换机声明失败: %s", err)
 		return err
 	}
 
@@ -111,7 +111,7 @@ func registerConsumer(exchange, routingKey, queueName string, messageHandler fun
 		nil,       // 额外参数
 	)
 	if err != nil {
-		logrus.Error("队列声明失败: %s", err)
+		logUtil.Errorf("队列声明失败: %s", err)
 		return err
 	}
 
@@ -124,7 +124,7 @@ func registerConsumer(exchange, routingKey, queueName string, messageHandler fun
 		nil,        // 额外参数
 	)
 	if err != nil {
-		logrus.Error("队列与交换机绑定失败: %s", err)
+		logUtil.Errorf("队列与交换机绑定失败: %s", err)
 		return err
 	}
 	// 消费者监听消息
@@ -138,10 +138,10 @@ func registerConsumer(exchange, routingKey, queueName string, messageHandler fun
 		nil,    // 额外参数
 	)
 	if err != nil {
-		logrus.Error("消费失败: %s", err)
+		logUtil.Errorf("消费者(%v)启动失败: %s", exchange+"-"+routingKey+"-"+queueName, err)
 		return err
 	}
-	logrus.Printf("消费者(%v)启动成功", exchange+" "+queueName+" "+routingKey)
+	logUtil.Infof("消费者(%v)启动成功", exchange+"-"+routingKey+"-"+queueName)
 	// 阻塞处理消息,一个消费者只负责一个队列
 	for msg := range msgs {
 		// 调用不同的消息处理函数
