@@ -60,3 +60,11 @@ func InitMysql() {
 	//打印数据库初始化 信息
 	log.Println("Database initialized successfully")
 }
+
+// 获取 GORM DB 实例，优先使用事务，如果没有事务则使用默认的 db.Mysql
+func GetGormDB(tx ...*gorm.DB) *gorm.DB {
+	if len(tx) > 0 {
+		return tx[0] // 使用事务对象
+	}
+	return Mysql // 使用默认数据库连接
+}

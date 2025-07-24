@@ -1,9 +1,10 @@
-package controllers
+package controller
 
 import (
 	"github.com/gin-gonic/gin"
 	model "go-chat/internal/model/request"
 	"go-chat/internal/service"
+	"strconv"
 )
 
 // UserController 用户相关控制器
@@ -40,8 +41,8 @@ func (con UserController) Ping(c *gin.Context) {
 // @Router /user/register [post]
 func (con UserController) Register(c *gin.Context) {
 	registerRequest := &model.RegisterRequest{}
-	if err := c.ShouldBindBodyWithJSON(registerRequest); err != nil {
-		con.Error(c, "params error")
+	if err := c.ShouldBindJSON(registerRequest); err != nil {
+		con.Error(c, err.Error())
 		return
 	}
 	userService := service.GetUserService()
@@ -65,8 +66,8 @@ func (con UserController) Register(c *gin.Context) {
 // @Router /user/login [post]
 func (con UserController) Login(c *gin.Context) {
 	loginRequest := &model.LoginRequest{}
-	if err := c.ShouldBindBodyWithJSON(loginRequest); err != nil {
-		con.Error(c, "参数错误")
+	if err := c.ShouldBindJSON(loginRequest); err != nil {
+		con.Error(c, err.Error())
 		return
 	}
 	userService := service.GetUserService()
@@ -77,6 +78,18 @@ func (con UserController) Login(c *gin.Context) {
 	}
 	con.Success(c, token)
 	return
+}
+
+func (con UserController) GetUserInfo(c *gin.Context) {
+	idStr := c.Query("id")
+	id, _ := strconv.ParseUint(idStr, 10, 64)
+	userService := service.GetUserService()
+	userInfo, err := userService.GetUserInfo(uint(id))
+	if err != nil {
+		con.Error(c, err.Error())
+		return
+	}
+	con.Success(c, userInfo)
 }
 
 // Update 用户更新信息接口
@@ -92,12 +105,17 @@ func (con UserController) Login(c *gin.Context) {
 // @Router /user/update [post]
 func (con UserController) Update(c *gin.Context) {
 	updateRequest := &model.UserUpdateRequest{}
-	if err := c.ShouldBindBodyWithJSON(&updateRequest); err != nil {
-		con.Error(c, "参数错误")
+	if err := c.ShouldBindJSON(&updateRequest); err != nil {
+		con.Error(c, err.Error())
+		return
+	}
+	err := updateRequest.Validate()
+	if err != nil {
+		con.Error(c, err.Error())
 		return
 	}
 	userService := service.GetUserService()
-	if err := userService.UpdateUser(updateRequest.ID, updateRequest.Nickname, updateRequest.Avatar, updateRequest.Phone, updateRequest.Email); err != nil {
+	if err := userService.UpdateUser(updateRequest); err != nil {
 		con.Error(c, err)
 		return
 	}

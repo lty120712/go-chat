@@ -1,4 +1,4 @@
-package utils
+package jwtUtil
 
 import (
 	"fmt"
@@ -12,7 +12,7 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-// 生成 JWT Token
+// GenerateJWT 生成 JWT Token
 func GenerateJWT(id uint) (string, error) {
 	// 获取动态的 JWT 配置信息
 	jwtConfig := configs.AppConfig.Jwt

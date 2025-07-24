@@ -1,0 +1,51 @@
+package model
+
+import (
+	"encoding/json"
+	"go-chat/internal/model"
+	"time"
+)
+
+// QueryMessagesResponse 查询消息列表
+type QueryMessagesResponse struct {
+	List    []*MessageVo `json:"list"`     // 消息列表
+	Cursor  int64        `json:"cursor"`   // 下一页游标（最小 id）
+	HasMore bool         `json:"has_more"` // 是否还有更多数据
+}
+
+type MessageVo struct {
+	ID           uint
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	SenderId     int64
+	ReceiverId   *int64
+	GroupId      *int64
+	ReplyId      *int64
+	ReaderIdList *model.ReaderIdList
+	TargetType   *model.TargetType
+	Content      *model.MessagePartList
+	Type         *model.MessageType
+	Status       *model.Status
+	ExtraData    *json.RawMessage
+	//额外信息
+	SenderNickName     *string
+	SenderAvatar       *string
+	SenderOnlineStatus *model.OnlineStatus
+	IsRead             bool
+}
+
+func (m *MessageVo) GetFieldsFromMessage(msg *model.Message) {
+	m.ID = msg.ID
+	m.CreatedAt = msg.CreatedAt
+	m.UpdatedAt = msg.UpdatedAt
+	m.SenderId = msg.SenderId
+	m.ReceiverId = msg.ReceiverId
+	m.GroupId = msg.GroupId
+	m.ReplyId = msg.ReplyId
+	m.ReaderIdList = msg.ReaderIdList
+	m.TargetType = msg.TargetType
+	m.Content = msg.Content
+	m.Type = msg.Type
+	m.Status = msg.Status
+	m.ExtraData = msg.ExtraData
+}

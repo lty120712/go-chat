@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
-	"go-chat/internal/utils"
+	"go-chat/internal/utils/jwtUtil"
 	"net/http"
 	"strings"
 )
@@ -26,7 +26,7 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		tokenStr = tokenStr[len("Bearer "):]
 
-		claims, err := utils.ParseJWT(tokenStr)
+		claims, err := jwtUtil.ParseJWT(tokenStr)
 		if err != nil {
 
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
