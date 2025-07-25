@@ -16,4 +16,8 @@ const (
 	OnlineStatus = "online_status" // 在线状态
 	Recall       = "recall"        //  撤回
 	IdRequest    = "id_request"    // 请求获取真实ID,引入mq之后采用
+
+	HeartBeat = "heartbeat" //心跳检测
+
+	HeartBeatAck = "heartbeat_ack" //心跳检测确认
 )

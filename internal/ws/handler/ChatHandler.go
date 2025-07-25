@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func ChatHandler(sendId int64, data interface{}) {
+func (ws *WebSocketHandler) ChatHandler(sendId int64, data interface{}) {
 	bytes, err := jsonUtil.MarshalValue(data)
 	if err != nil {
 		wsClient.WebSocketClient.SendMessageToOne(sendId, &model.Response{

@@ -17,4 +17,7 @@ type UserRepositoryInterface interface {
 	GetNickNamesById(id uint, tx ...*gorm.DB) (nickname string, err error)
 	GetByIdList(userIdList []uint, tx ...*gorm.DB) (userList []model.User, err error)
 	GetVoById(id uint, tx ...*gorm.DB) (userVo response.UserVO, err error)
+	UpdateHeartbeatTime(userId int64, time int64, tx ...*gorm.DB) error
+
+	GetUsersWithHeartbeatBefore(cutoffTime int64, tx ...*gorm.DB) ([]model.User, error)
 }

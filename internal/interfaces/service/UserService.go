@@ -15,4 +15,8 @@ type UserServiceInterface interface {
 	OnlineStatusChange(id uint, onlineStatus model.OnlineStatus) error
 	UpdateUser(updateRequest *request.UserUpdateRequest) error
 	GetUserInfo(id uint) (response.UserVO, error)
+
+	UpdateHeartbeatTime(userId int64, time int64) error
+
+	CheckOfflineUsers() error
 }

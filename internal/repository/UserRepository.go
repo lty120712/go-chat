@@ -104,3 +104,26 @@ func (r *UserRepository) GetVoById(id uint, tx ...*gorm.DB) (userVo response.Use
 
 	return userVo, err
 }
+
+func (r *UserRepository) UpdateHeartbeatTime(userId int64, heartbeatTime int64, tx ...*gorm.DB) error {
+	gormDB := db.GetGormDB(tx...)
+
+	// heartbeat_time 总是更新
+	// online_status 仅当当前状态为 Offline 时更新为 Online
+	return gormDB.Model(&model.User{}).
+		Where("id = ?", userId).
+		Updates(map[string]interface{}{
+			"heartbeat_time": heartbeatTime,
+			"online_status": gorm.Expr(
+				"CASE WHEN online_status = ? THEN ? ELSE online_status END",
+				model.Offline, model.Online,
+			),
+		}).Error
+}
+func (r *UserRepository) GetUsersWithHeartbeatBefore(cutoffTime int64, tx ...*gorm.DB) ([]model.User, error) {
+	gormDB := db.GetGormDB(tx...)
+	var users []model.User
+	err := gormDB.Where("heartbeat_time < ? AND online_status = ?", cutoffTime, model.Online).
+		Find(&users).Error
+	return users, err
+}

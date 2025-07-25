@@ -64,3 +64,12 @@
 }
 
 ```
+
+心跳检测
+
+```json
+{
+  "type": "heartbeat",
+  "send_id": 3
+}
+```

@@ -7,6 +7,6 @@ import (
 var Timer = cron.New(cron.WithSeconds())
 
 func InitTimer() {
-	//HeartBeatTimer()
+	HeartBeatTimer()
 	Timer.Start()
 }

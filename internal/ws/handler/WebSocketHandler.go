@@ -42,7 +42,9 @@ func (ws *WebSocketHandler) MessageHandler(id int64, messageBytes []byte) {
 	}
 	switch message.Type {
 	case wsMessage.Chat:
-		ChatHandler(message.SendId, message.Data)
+		ws.ChatHandler(message.SendId, message.Data)
+	case wsMessage.HeartBeat:
+		ws.HeartBeatHandler(message.SendId, message.Data)
 	default:
 		wsClient.WebSocketClient.SendMessageToOne(id, &model.Response{
 			Code:    http.StatusBadRequest,
