@@ -3,9 +3,9 @@ package controller
 import (
 	"github.com/gin-gonic/gin"
 	"go-chat/configs"
+	interfacesservice "go-chat/internal/interfaces/service"
 	"go-chat/internal/manager"
 	request "go-chat/internal/model/request"
-	"go-chat/internal/service"
 )
 
 // MessageController 消息相关控制器
@@ -13,6 +13,15 @@ import (
 // @Description 消息相关控制器
 type MessageController struct {
 	BaseController
+	messageService interfacesservice.MessageServiceInterface
+}
+
+var MessageControllerInstance *MessageController
+
+func InitMessageController(messageService interfacesservice.MessageServiceInterface) {
+	MessageControllerInstance = &MessageController{
+		messageService: messageService,
+	}
 }
 
 // SendString 发送消息接口
@@ -84,8 +93,7 @@ func (con MessageController) Read(c *gin.Context) {
 		con.Error(c, "参数错误")
 		return
 	}
-	messageService := service.GetMessageService()
-	if err := messageService.ReadMessage(req.MessageId, req.UserId); err != nil {
+	if err := con.messageService.ReadMessage(req.MessageId, req.UserId); err != nil {
 		con.Error(c, err.Error())
 		return
 	}
@@ -113,8 +121,7 @@ func (con MessageController) Query(c *gin.Context) {
 	//userid来自中间件
 	idStr, _ := c.Get("id")
 	id := idStr.(uint)
-	messageService := service.GetMessageService()
-	if data, err := messageService.QueryMessages(id, &req); err != nil {
+	if data, err := con.messageService.QueryMessages(id, &req); err != nil {
 		con.Error(c, err.Error())
 		return
 	} else {

@@ -17,11 +17,10 @@ var (
 	messageOnce               sync.Once
 )
 
-func GetMessageRepository() *MessageRepository {
+func InitMessageRepository() {
 	messageOnce.Do(func() {
 		MessageRepositoryInstance = &MessageRepository{}
 	})
-	return MessageRepositoryInstance
 }
 
 func (r *MessageRepository) Save(message *model.Message) (err error) {

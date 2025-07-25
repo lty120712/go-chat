@@ -2,8 +2,8 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
+	interfacesservice "go-chat/internal/interfaces/service"
 	request "go-chat/internal/model/request"
-	"go-chat/internal/service"
 	"strconv"
 )
 
@@ -12,6 +12,15 @@ import (
 // @Description 群组相关控制器
 type GroupController struct {
 	BaseController
+	groupService interfacesservice.GroupServiceInterface
+}
+
+var GroupControllerInstance *GroupController
+
+func InitGroupController(groupService interfacesservice.GroupServiceInterface) {
+	GroupControllerInstance = &GroupController{
+		groupService: groupService,
+	}
 }
 
 // Create 创建群组
@@ -37,8 +46,7 @@ func (con GroupController) Create(c *gin.Context) {
 		return
 	}
 
-	groupService := service.GetGroupService()
-	if err := groupService.Create(req); err != nil {
+	if err := con.groupService.Create(req); err != nil {
 		con.Error(c, err.Error())
 		return
 	}
@@ -57,8 +65,8 @@ func (con GroupController) Join(c *gin.Context) {
 		con.Error(c, "need user_id")
 		return
 	}
-	groupService := service.GetGroupService()
-	if err := groupService.Join(uint(groupId), userId.(uint)); err != nil {
+
+	if err := con.groupService.Join(uint(groupId), userId.(uint)); err != nil {
 		con.Error(c, err.Error())
 		return
 	}
@@ -73,8 +81,7 @@ func (con GroupController) Quit(c *gin.Context) {
 		con.Error(c, "need user_id")
 		return
 	}
-	groupService := service.GetGroupService()
-	if err := groupService.Quit(uint(groupId), userId.(uint)); err != nil {
+	if err := con.groupService.Quit(uint(groupId), userId.(uint)); err != nil {
 		con.Error(c, err.Error())
 		return
 	}
@@ -88,8 +95,7 @@ func (con GroupController) Search(c *gin.Context) {
 func (con GroupController) Member(c *gin.Context) {
 	groupIdStr := c.Query("group_id")
 	groupId, _ := strconv.ParseUint(groupIdStr, 10, 64)
-	groupService := service.GetGroupService()
-	members, err := groupService.Member(uint(groupId))
+	members, err := con.groupService.Member(uint(groupId))
 	if err != nil {
 		con.Error(c, err.Error())
 		return

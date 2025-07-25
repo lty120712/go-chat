@@ -4,29 +4,37 @@ import (
 	"errors"
 	"fmt"
 	"go-chat/internal/db"
-	models "go-chat/internal/model"
-	model "go-chat/internal/model/request"
+	interfacehandler "go-chat/internal/interfaces/handler"
+	interfacerepository "go-chat/internal/interfaces/repository"
+	"go-chat/internal/model"
+	request "go-chat/internal/model/request"
 	response "go-chat/internal/model/response"
-	"go-chat/internal/repository"
 	"go-chat/internal/utils/jwtUtil"
 	"go-chat/internal/utils/logUtil"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 	"sync"
+	"time"
 )
 
-type UserService struct{}
+type UserService struct {
+	userRepository interfacerepository.UserRepositoryInterface
+	wsHandler      interfacehandler.WsHandlerInterface
+}
 
 var (
-	userServiceInstance *UserService
+	UserServiceInstance *UserService
 	once                sync.Once
 )
 
-func GetUserService() *UserService {
+func InitUserService(wsHandler interfacehandler.WsHandlerInterface, userRepository interfacerepository.UserRepositoryInterface) *UserService {
 	once.Do(func() {
-		userServiceInstance = &UserService{}
+		UserServiceInstance = &UserService{
+			wsHandler:      wsHandler,
+			userRepository: userRepository,
+		}
 	})
-	return userServiceInstance
+	return UserServiceInstance
 }
 
 // Register 注册
@@ -34,8 +42,7 @@ func (u *UserService) Register(username, password, rePassword *string) (err erro
 	if *password != *rePassword {
 		return errors.New("密码不一致")
 	}
-	userRepository := repository.GetUserRepository()
-	user, err := userRepository.GetByName(username)
+	user, err := u.userRepository.GetByName(username)
 	if err != nil {
 		logUtil.Errorf("GetUserByName error: %v", err)
 		return err
@@ -48,13 +55,13 @@ func (u *UserService) Register(username, password, rePassword *string) (err erro
 	if err != nil {
 		return err
 	}
-	user = &models.User{Username: *username,
+	user = &model.User{Username: *username,
 		Password:     string(hashedPassword),
 		Nickname:     username,
-		Status:       models.Enable,
-		OnlineStatus: models.Offline,
+		Status:       model.Enable,
+		OnlineStatus: model.Offline,
 	}
-	err = userRepository.Save(user)
+	err = u.userRepository.Save(user)
 	if err != nil {
 		logUtil.Errorf("保存用户失败: %v", err)
 		return err
@@ -64,8 +71,11 @@ func (u *UserService) Register(username, password, rePassword *string) (err erro
 
 func (u *UserService) Login(username, password *string) (token string, err error) {
 	//根据username查询
-	userRepository := repository.GetUserRepository()
-	user, err := userRepository.GetByName(username)
+	user, err := u.userRepository.GetByName(username)
+	// todo 1.非封禁状态 之后维护redis 黑名单
+	if user.Status == model.Disable {
+		return "", errors.New("用户被封禁")
+	}
 	if err != nil {
 		return "", err
 	}
@@ -81,14 +91,31 @@ func (u *UserService) Login(username, password *string) (token string, err error
 	if err != nil {
 		return "", err
 	}
+	if user.OnlineStatus == model.Offline {
+		user.OnlineStatus = model.Online
+		fields := map[string]interface{}{
+			"online_status": user.OnlineStatus,
+			"login_time":    time.Now().Unix(),
+		}
+		err = u.userRepository.UpdateFields(user.ID, fields, db.Mysql)
+		if err != nil {
+			return "", err
+		}
+		//todo 2.ws通知与我相关的好友或群组在线状态
+		onlineStatusNotice := model.OnlineStatusNotice{
+			UserId:       user.ID,
+			OnlineStatus: model.Online,
+			ActionType:   model.LoginAction,
+		}
+		go u.wsHandler.OnlineStatusNotice(int64(user.ID), onlineStatusNotice)
+	}
 	return token, nil
 }
 
-func (u *UserService) UpdateUser(updateRequest *model.UserUpdateRequest) error {
+func (u *UserService) UpdateUser(updateRequest *request.UserUpdateRequest) error {
 	err := db.Mysql.Transaction(func(tx *gorm.DB) error {
-		userRepository := repository.GetUserRepository()
 
-		user, err := userRepository.GetById(updateRequest.ID, tx)
+		user, err := u.userRepository.GetById(updateRequest.ID, tx)
 		if err != nil {
 			return fmt.Errorf("查找用户失败: %v", err)
 		}
@@ -114,7 +141,7 @@ func (u *UserService) UpdateUser(updateRequest *model.UserUpdateRequest) error {
 		if len(updates) == 0 {
 			return errors.New("没有可更新的字段")
 		}
-		err = userRepository.UpdateFields(user.ID, updates, tx)
+		err = u.userRepository.UpdateFields(user.ID, updates, tx)
 		if err != nil {
 			return fmt.Errorf("更新用户失败: %v", err)
 		}
@@ -127,7 +154,6 @@ func (u *UserService) UpdateUser(updateRequest *model.UserUpdateRequest) error {
 }
 
 func (u *UserService) GetUserInfo(id uint) (response.UserVO, error) {
-	userRepository := repository.GetUserRepository()
-	userVo, err := userRepository.GetVoById(id)
+	userVo, err := u.userRepository.GetVoById(id)
 	return userVo, err
 }

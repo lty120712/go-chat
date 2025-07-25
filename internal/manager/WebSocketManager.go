@@ -3,14 +3,15 @@ package manager
 import (
 	"github.com/gorilla/websocket"
 	"go-chat/internal/utils/logUtil"
-	"go-chat/internal/ws"
+	wsClient "go-chat/internal/ws/client"
+	"go-chat/internal/ws/handler"
 	"net/http"
 	"strconv"
 )
 
 // 初始化 WebSocket
 func InitWebSocket() {
-	ws.WebSocketClient = &ws.WebSocketManager{
+	wsClient.WebSocketClient = &wsClient.WebSocketManager{
 		Upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
 				// 这里可以加检查来源的逻辑
@@ -23,8 +24,8 @@ func InitWebSocket() {
 
 	// 启动 WebSocket 服务
 	go func() {
-		ws.WebSocketClient.Server = &http.Server{Addr: ":80"}
-		if err := ws.WebSocketClient.Server.ListenAndServe(); err != nil {
+		wsClient.WebSocketClient.Server = &http.Server{Addr: ":80"}
+		if err := wsClient.WebSocketClient.Server.ListenAndServe(); err != nil {
 			logUtil.Errorf("WebSocket 服务启动失败: %s", err)
 		}
 	}()
@@ -33,7 +34,7 @@ func InitWebSocket() {
 
 // WebSocket 连接处理
 func handleWebSocket(w http.ResponseWriter, r *http.Request) {
-	conn, err := ws.WebSocketClient.Upgrader.Upgrade(w, r, nil)
+	conn, err := wsClient.WebSocketClient.Upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		logUtil.Errorf("WebSocket 连接失败: %s", err)
 		return
@@ -47,7 +48,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 存储连接
-	ws.WebSocketClient.Connections.Store(id, conn)
+	wsClient.WebSocketClient.Connections.Store(id, conn)
 	// 连接成功后的回调
 	onOpen(conn, id)
 	// 处理 WebSocket 消息
@@ -59,7 +60,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 		// 消息处理函数
-		ws.MessageHandler(msg)
+		wsHandler.WebSocketHandlerInstance.MessageHandler(id, msg)
 	}
 	// 连接断开时调用 onClose 并删除连接
 	onClose(conn, id)
@@ -68,12 +69,12 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 func onOpen(conn *websocket.Conn, id int64) {
 	logUtil.Infof("WebSocket 客户端(%v)已连接: %s", conn.RemoteAddr(), id)
 	//todo 更新心跳 时间
-	ws.WebSocketClient.SendMessageToOne(id, "连接成功")
+	wsClient.WebSocketClient.SendMessageToOne(id, "连接成功")
 }
 
 func onClose(conn *websocket.Conn, id int64) {
 	logUtil.Infof("WebSocket 客户端(%v)已断开: %s", id, conn.RemoteAddr())
-	ws.WebSocketClient.Connections.Delete(id)
+	wsClient.WebSocketClient.Connections.Delete(id)
 }
 
 func onError(conn *websocket.Conn, id int64, err error) {

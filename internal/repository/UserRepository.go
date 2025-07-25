@@ -17,11 +17,11 @@ var (
 	userOnce               sync.Once
 )
 
-func GetUserRepository() *UserRepository {
+func InitUserRepository() {
 	userOnce.Do(func() {
 		UserRepositoryInstance = &UserRepository{}
 	})
-	return UserRepositoryInstance
+
 }
 
 // GetById

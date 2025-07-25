@@ -2,26 +2,35 @@ package service
 
 import (
 	"errors"
+	interfacerepository "go-chat/internal/interfaces/repository"
 	"go-chat/internal/model"
 	request "go-chat/internal/model/request"
 	response "go-chat/internal/model/response"
-	"go-chat/internal/repository"
 	"go-chat/internal/utils"
 	"sync"
 )
 
-type MessageService struct{}
+type MessageService struct {
+	messageRepository     interfacerepository.MessageRepositoryInterface
+	userRepository        interfacerepository.UserRepositoryInterface
+	groupMemberRepository interfacerepository.GroupMemberRepositoryInterface
+}
 
 var (
-	messageServiceInstance *MessageService
+	MessageServiceInstance *MessageService
 	messageOnce            sync.Once
 )
 
-func GetMessageService() *MessageService {
+func InitMessageService(messageRepository interfacerepository.MessageRepositoryInterface,
+	userRepository interfacerepository.UserRepositoryInterface,
+	groupMemberRepository interfacerepository.GroupMemberRepositoryInterface) {
 	messageOnce.Do(func() {
-		messageServiceInstance = &MessageService{}
+		MessageServiceInstance = &MessageService{
+			messageRepository:     messageRepository,
+			userRepository:        userRepository,
+			groupMemberRepository: groupMemberRepository,
+		}
 	})
-	return messageServiceInstance
 }
 
 // SendMessage 发送消息（支持私聊和群聊）
@@ -45,8 +54,7 @@ func (s *MessageService) SendMessage(msg *model.Message) (*response.MessageVo, e
 	if len(*msg.Content) == 0 {
 		return nil, errors.New("消息内容不能为空")
 	}
-	messageRepo := repository.GetMessageRepository()
-	if err := messageRepo.Save(msg); err != nil {
+	if err := s.messageRepository.Save(msg); err != nil {
 		return nil, err
 	}
 	vo, err := s.GetMessageById(msg.ID)
@@ -58,16 +66,14 @@ func (s *MessageService) SendMessage(msg *model.Message) (*response.MessageVo, e
 
 // GetMessageById  获取消息
 func (s *MessageService) GetMessageById(id uint) (*response.MessageVo, error) {
-	repo := repository.GetMessageRepository()
-	message, err := repo.GetById(id)
+	message, err := s.messageRepository.GetById(id)
 	if err != nil {
 		return nil, err
 	}
 	var messageVo = &response.MessageVo{}
 	messageVo.GetFieldsFromMessage(message)
 	//获取发送者信息
-	userRepo := repository.GetUserRepository()
-	sender, _ := userRepo.GetById(uint(message.SenderId))
+	sender, _ := s.userRepository.GetById(uint(message.SenderId))
 	messageVo.SenderNickName = new(string)
 	messageVo.SenderNickName = sender.Nickname
 	messageVo.SenderAvatar = new(string)
@@ -79,8 +85,7 @@ func (s *MessageService) GetMessageById(id uint) (*response.MessageVo, error) {
 
 func (s *MessageService) ReadMessage(messageId uint, userId uint) error {
 	//1.消息是否存在
-	messageRepo := repository.GetMessageRepository()
-	message, err := messageRepo.GetById(messageId)
+	message, err := s.messageRepository.GetById(messageId)
 	if err != nil {
 		return err
 	}
@@ -99,7 +104,7 @@ func (s *MessageService) ReadMessage(messageId uint, userId uint) error {
 	updateFields := map[string]interface{}{
 		"reader_id_list": message.ReaderIdList,
 	}
-	err = messageRepo.UpdateFields(messageId, updateFields)
+	err = s.messageRepository.UpdateFields(messageId, updateFields)
 	if err != nil {
 		return err
 	}
@@ -107,10 +112,7 @@ func (s *MessageService) ReadMessage(messageId uint, userId uint) error {
 }
 
 func (s *MessageService) QueryMessages(userId uint, req *request.QueryMessagesRequest) (*response.QueryMessagesResponse, error) {
-	repo := repository.GetMessageRepository()
-	userRepository := repository.GetUserRepository()
-	memberRepository := repository.GetGroupMemberRepository()
-	messages, err := repo.QueryHistoryMessages(userId, req)
+	messages, err := s.messageRepository.QueryHistoryMessages(userId, req)
 	if err != nil {
 		return nil, err
 	}
@@ -125,13 +127,13 @@ func (s *MessageService) QueryMessages(userId uint, req *request.QueryMessagesRe
 		senderIds[i] = uint(msg.SenderId)
 	}
 	var idToUserMap = make(map[uint]*model.User)
-	userList, _ := userRepository.GetByIdList(senderIds)
+	userList, _ := s.userRepository.GetByIdList(senderIds)
 	for _, user := range userList {
 		user1 := user
 		idToUserMap[user.ID] = &user1
 	}
 	if *req.TargetType == model.GroupTarget {
-		memberList, _ := memberRepository.GetMemberListByGroupId(req.TargetId)
+		memberList, _ := s.groupMemberRepository.GetMemberListByGroupId(req.TargetId)
 		if memberList != nil {
 			for _, member := range memberList {
 				if user, exists := idToUserMap[member.UserId]; exists {

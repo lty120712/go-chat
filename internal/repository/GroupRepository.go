@@ -15,11 +15,11 @@ var (
 	groupOnce               sync.Once
 )
 
-func GetGroupRepository() *GroupRepository {
+func InitGroupRepository() {
 	groupOnce.Do(func() {
 		GroupRepositoryInstance = &GroupRepository{}
 	})
-	return GroupRepositoryInstance
+
 }
 
 func (g *GroupRepository) ExistsByCode(code string, tx ...*gorm.DB) bool {

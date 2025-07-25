@@ -2,6 +2,7 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
+	interfacesservice "go-chat/internal/interfaces/service"
 	model "go-chat/internal/model/request"
 	"go-chat/internal/service"
 	"strconv"
@@ -12,6 +13,15 @@ import (
 // @Description 控制用户相关的 API，包含用户注册、登录和 ping 等接口
 type UserController struct {
 	BaseController
+	userService interfacesservice.UserServiceInterface
+}
+
+var UserControllerInstance *UserController
+
+func InitUserController(userService interfacesservice.UserServiceInterface) {
+	UserControllerInstance = &UserController{
+		userService: userService,
+	}
 }
 
 // Ping 返回一个 ping 的响应，测试接口是否可用
@@ -45,8 +55,7 @@ func (con UserController) Register(c *gin.Context) {
 		con.Error(c, err.Error())
 		return
 	}
-	userService := service.GetUserService()
-	if err := userService.Register(registerRequest.Username, registerRequest.Password, registerRequest.RePassword); err != nil {
+	if err := service.UserServiceInstance.Register(registerRequest.Username, registerRequest.Password, registerRequest.RePassword); err != nil {
 		con.Error(c, err.Error())
 		return
 	}
@@ -70,8 +79,7 @@ func (con UserController) Login(c *gin.Context) {
 		con.Error(c, err.Error())
 		return
 	}
-	userService := service.GetUserService()
-	token, err := userService.Login(loginRequest.Username, loginRequest.Password)
+	token, err := con.userService.Login(loginRequest.Username, loginRequest.Password)
 	if err != nil {
 		con.Error(c, err.Error())
 		return
@@ -80,11 +88,17 @@ func (con UserController) Login(c *gin.Context) {
 	return
 }
 
+func (con UserController) Logout(c *gin.Context) {
+	//todo 之后再redis维护黑名单
+
+	con.Success(c)
+	return
+}
+
 func (con UserController) GetUserInfo(c *gin.Context) {
 	idStr := c.Query("id")
 	id, _ := strconv.ParseUint(idStr, 10, 64)
-	userService := service.GetUserService()
-	userInfo, err := userService.GetUserInfo(uint(id))
+	userInfo, err := con.userService.GetUserInfo(uint(id))
 	if err != nil {
 		con.Error(c, err.Error())
 		return
@@ -114,8 +128,7 @@ func (con UserController) Update(c *gin.Context) {
 		con.Error(c, err.Error())
 		return
 	}
-	userService := service.GetUserService()
-	if err := userService.UpdateUser(updateRequest); err != nil {
+	if err := con.userService.UpdateUser(updateRequest); err != nil {
 		con.Error(c, err)
 		return
 	}

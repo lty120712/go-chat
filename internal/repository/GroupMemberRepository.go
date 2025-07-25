@@ -17,11 +17,10 @@ var (
 	groupMemberOnce               sync.Once
 )
 
-func GetGroupMemberRepository() *GroupMemberRepository {
+func InitGroupMemberRepository() {
 	groupMemberOnce.Do(func() {
 		GroupMemberRepositoryInstance = &GroupMemberRepository{}
 	})
-	return GroupMemberRepositoryInstance
 }
 
 func (r *GroupMemberRepository) SaveBatch(list []*model.GroupMember, tx *gorm.DB) error {
@@ -70,7 +69,7 @@ func (r *GroupMemberRepository) GetMemberListByGroupId(groupId uint, tx ...*gorm
 	var memberList []response.MemberVo
 
 	err := gormDB.Table("group_members as gm").
-		Select("gm.member_id AS user_id, IFNULL(gm.g_nick_name, u.nickname) AS nickname, gm.role,u.avatar, u.online_status").
+		Select("gm.group_id, gm.member_id AS user_id, IFNULL(gm.g_nick_name, u.nickname) AS nickname, gm.role,u.avatar, u.online_status").
 		Joins("JOIN users u ON gm.member_id = u.id").
 		Where("gm.group_id = ?", groupId).
 		Order("u.online_status DESC").
@@ -93,4 +92,35 @@ func (r *GroupMemberRepository) IsOwner(groupId uint, memberId uint, tx ...*gorm
 		return true
 	}
 	return false
+}
+func (r *GroupMemberRepository) GetRelatedMemberByUserId(id uint) (memberList []response.MemberVo, err error) {
+	gormDB := db.GetGormDB()
+
+	var groupIds []uint
+	err = gormDB.Model(&model.GroupMember{}).
+		Where("member_id = ?", id).
+		Pluck("group_id", &groupIds).
+		Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(groupIds) == 0 {
+		return nil, nil
+	}
+
+	// 联表查询并去重
+	err = gormDB.Model(&model.GroupMember{}).
+		Select("group_members.member_id as user_id,group_members.group_id, group_members.g_nick_name as nickname, group_members.role, users.avatar, users.online_status").
+		Joins("LEFT JOIN users ON users.id = group_members.member_id"). // 联接 User 表
+		Where("group_members.group_id IN ? AND group_members.member_id != ? AND users.online_status = ?", groupIds, id, model.Online).
+		Find(&memberList).
+		Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return memberList, nil
 }

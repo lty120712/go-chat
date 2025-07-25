@@ -3,47 +3,55 @@ package service
 import (
 	"errors"
 	"go-chat/internal/db"
+	interfacerepository "go-chat/internal/interfaces/repository"
 	"go-chat/internal/model"
 	request "go-chat/internal/model/request"
 	response "go-chat/internal/model/response"
-	"go-chat/internal/repository"
 	"go-chat/internal/utils/idUtil"
 	"gorm.io/gorm"
 	"sort"
 	"sync"
 )
 
-type GroupService struct{}
+type GroupService struct {
+	groupRepository       interfacerepository.GroupRepositoryInterface
+	messageRepository     interfacerepository.MessageRepositoryInterface
+	userRepository        interfacerepository.UserRepositoryInterface
+	groupMemberRepository interfacerepository.GroupMemberRepositoryInterface
+}
 
 var (
-	groupServiceInstance *GroupService
+	GroupServiceInstance *GroupService
 	groupOnce            sync.Once
 )
 
-func GetGroupService() *GroupService {
+func InitGroupService(groupRepository interfacerepository.GroupRepositoryInterface,
+	messageRepository interfacerepository.MessageRepositoryInterface,
+	userRepository interfacerepository.UserRepositoryInterface,
+	groupMemberRepository interfacerepository.GroupMemberRepositoryInterface) {
 	groupOnce.Do(func() {
-		groupServiceInstance = &GroupService{}
+		GroupServiceInstance = &GroupService{
+			groupRepository:       groupRepository,
+			messageRepository:     messageRepository,
+			userRepository:        userRepository,
+			groupMemberRepository: groupMemberRepository,
+		}
 	})
-	return groupServiceInstance
 }
 
 // Create 创建群组
 func (s GroupService) Create(req *request.GroupCreateRequest) error {
 	err := db.Mysql.Transaction(func(tx *gorm.DB) error {
-		groupRepo := repository.GetGroupRepository()
-		groupMemberRepo := repository.GetGroupMemberRepository()
-		userRepo := repository.GetUserRepository()
-
 		maxAttempts := 3
 		code := idUtil.GenerateId()
 		for attempts := 0; attempts < maxAttempts; attempts++ {
-			if exists := groupRepo.ExistsByCode(code, tx); !exists {
+			if exists := s.groupRepository.ExistsByCode(code, tx); !exists {
 				break
 			}
 			code = idUtil.GenerateId()
 		}
 
-		if exists := groupRepo.ExistsByCode(code, tx); exists {
+		if exists := s.groupRepository.ExistsByCode(code, tx); exists {
 			return errors.New("error code, please try again")
 		}
 
@@ -56,14 +64,14 @@ func (s GroupService) Create(req *request.GroupCreateRequest) error {
 			Status:  model.Enable,
 		}
 
-		if err := groupRepo.Save(group, tx); err != nil {
+		if err := s.groupRepository.Save(group, tx); err != nil {
 			return err
 		}
 
 		if req.MemberList != nil && len(*req.MemberList) > 0 {
 			groupMemberList := make([]*model.GroupMember, len(*req.MemberList))
 
-			idNickNameMap, err := userRepo.GetNickNamesByIds(*req.MemberList, tx)
+			idNickNameMap, err := s.userRepository.GetNickNamesByIds(*req.MemberList, tx)
 			if err != nil {
 				return err
 			}
@@ -85,7 +93,7 @@ func (s GroupService) Create(req *request.GroupCreateRequest) error {
 				}
 			}
 
-			if err := groupMemberRepo.SaveBatch(groupMemberList, tx); err != nil {
+			if err := s.groupMemberRepository.SaveBatch(groupMemberList, tx); err != nil {
 				return err
 			}
 		}
@@ -102,17 +110,15 @@ func (s GroupService) Create(req *request.GroupCreateRequest) error {
 
 func (s GroupService) Join(groupId uint, userId uint) error {
 	return db.Mysql.Transaction(func(tx *gorm.DB) error {
-		userRepo := repository.GetUserRepository()
-		groupMemberRepo := repository.GetGroupMemberRepository()
-		exists := groupMemberRepo.ExistsByGroupIdAndUserId(groupId, userId, tx)
+		exists := s.groupMemberRepository.ExistsByGroupIdAndUserId(groupId, userId, tx)
 		if exists {
 			return errors.New("用户已加入该群组")
 		}
-		rejoin := groupMemberRepo.RejoinGroupIfDeleted(groupId, userId, tx)
+		rejoin := s.groupMemberRepository.RejoinGroupIfDeleted(groupId, userId, tx)
 		if rejoin {
 			return nil
 		}
-		nickname, err := userRepo.GetNickNamesById(userId, tx)
+		nickname, err := s.userRepository.GetNickNamesById(userId, tx)
 		if err != nil {
 			return err
 		}
@@ -123,7 +129,7 @@ func (s GroupService) Join(groupId uint, userId uint) error {
 			Role:      model.Member,
 			Status:    model.Enable,
 		}
-		if err := groupMemberRepo.Save(member, tx); err != nil {
+		if err := s.groupMemberRepository.Save(member, tx); err != nil {
 			return err
 		}
 		return nil
@@ -131,17 +137,15 @@ func (s GroupService) Join(groupId uint, userId uint) error {
 }
 
 func (s GroupService) Quit(groupId uint, memberId uint) error {
-	memberRepository := repository.GetGroupMemberRepository()
 	//群主不能退
-	if memberRepository.IsOwner(groupId, memberId) {
+	if s.groupMemberRepository.IsOwner(groupId, memberId) {
 		return errors.New("owner can not quit")
 	}
-	return memberRepository.DeleteByGroupIdAndUserId(groupId, memberId)
+	return s.groupMemberRepository.DeleteByGroupIdAndUserId(groupId, memberId)
 }
 
 func (s GroupService) Member(groupId uint) (memberList []response.MemberVo, err error) {
-	memberRepository := repository.GetGroupMemberRepository()
-	memberList, err = memberRepository.GetMemberListByGroupId(groupId)
+	memberList, err = s.groupMemberRepository.GetMemberListByGroupId(groupId)
 	if err != nil {
 		return
 	}

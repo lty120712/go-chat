@@ -26,6 +26,8 @@ func Start() {
 	db.InitRedis()
 	//配置logrus
 	logrus.SetFormatter(&logrus.TextFormatter{ForceColors: true})
+	//配置依赖注入
+	doWire()
 	//配置路由基本信息
 	router := gin.Default()
 	// 配置swagger

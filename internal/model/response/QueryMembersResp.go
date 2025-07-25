@@ -3,6 +3,7 @@ package model
 import "go-chat/internal/model"
 
 type MemberVo struct {
+	GroupId      uint               ` json:"group_id"`
 	UserId       uint               `json:"user_id"`
 	Nickname     string             `json:"nickname"`
 	Role         model.Role         `json:"role"`
