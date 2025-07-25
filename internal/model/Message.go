@@ -75,7 +75,7 @@ type MessagePart struct {
 
 type MessagePartList []*MessagePart
 
-func (parts MessagePartList) Value() (driver.Value, error) {
+func (parts *MessagePartList) Value() (driver.Value, error) {
 	return jsonUtil.MarshalValue(parts)
 }
 
@@ -85,7 +85,7 @@ func (parts *MessagePartList) Scan(value interface{}) error {
 
 type ReaderIdList []uint
 
-func (ids ReaderIdList) Value() (driver.Value, error) {
+func (ids *ReaderIdList) Value() (driver.Value, error) {
 	return jsonUtil.MarshalValue(ids)
 }
 func (ids *ReaderIdList) Scan(value interface{}) error {

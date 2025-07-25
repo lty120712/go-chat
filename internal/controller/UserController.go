@@ -3,7 +3,8 @@ package controller
 import (
 	"github.com/gin-gonic/gin"
 	interfacesservice "go-chat/internal/interfaces/service"
-	model "go-chat/internal/model/request"
+	"go-chat/internal/model"
+	request "go-chat/internal/model/request"
 	"go-chat/internal/service"
 	"strconv"
 )
@@ -50,7 +51,7 @@ func (con UserController) Ping(c *gin.Context) {
 // @Failure 400 {object} model.Response "请求参数错误"
 // @Router /user/register [post]
 func (con UserController) Register(c *gin.Context) {
-	registerRequest := &model.RegisterRequest{}
+	registerRequest := &request.RegisterRequest{}
 	if err := c.ShouldBindJSON(registerRequest); err != nil {
 		con.Error(c, err.Error())
 		return
@@ -74,7 +75,7 @@ func (con UserController) Register(c *gin.Context) {
 // @Failure 401 {object} model.Response "登陆失败"
 // @Router /user/login [post]
 func (con UserController) Login(c *gin.Context) {
-	loginRequest := &model.LoginRequest{}
+	loginRequest := &request.LoginRequest{}
 	if err := c.ShouldBindJSON(loginRequest); err != nil {
 		con.Error(c, err.Error())
 		return
@@ -89,16 +90,25 @@ func (con UserController) Login(c *gin.Context) {
 }
 
 func (con UserController) Logout(c *gin.Context) {
-	//todo 之后再redis维护黑名单
-
+	id := c.GetUint("id")
+	con.userService.Logout(id)
 	con.Success(c)
 	return
 }
 
+func (con UserController) OnlineStatusChange(c *gin.Context) {
+	id := c.GetUint("id")
+	onlineStatus, _ := strconv.ParseInt(c.Query("online_status"), 10, 64)
+	if err := con.userService.OnlineStatusChange(id, model.OnlineStatus(onlineStatus)); err != nil {
+		con.Error(c, err.Error())
+		return
+	}
+	con.Success(c)
+}
+
 func (con UserController) GetUserInfo(c *gin.Context) {
-	idStr := c.Query("id")
-	id, _ := strconv.ParseUint(idStr, 10, 64)
-	userInfo, err := con.userService.GetUserInfo(uint(id))
+	id := c.GetUint("id")
+	userInfo, err := con.userService.GetUserInfo(id)
 	if err != nil {
 		con.Error(c, err.Error())
 		return
@@ -118,7 +128,7 @@ func (con UserController) GetUserInfo(c *gin.Context) {
 // @Failure 401 {string} string "未授权"
 // @Router /user/update [post]
 func (con UserController) Update(c *gin.Context) {
-	updateRequest := &model.UserUpdateRequest{}
+	updateRequest := &request.UserUpdateRequest{}
 	if err := c.ShouldBindJSON(&updateRequest); err != nil {
 		con.Error(c, err.Error())
 		return

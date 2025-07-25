@@ -94,8 +94,9 @@ func (u *UserService) Login(username, password *string) (token string, err error
 	if user.OnlineStatus == model.Offline {
 		user.OnlineStatus = model.Online
 		fields := map[string]interface{}{
-			"online_status": user.OnlineStatus,
-			"login_time":    time.Now().Unix(),
+			"online_status":  user.OnlineStatus,
+			"login_time":     time.Now().Unix(),
+			"heartbeat_time": time.Now().Unix(),
 		}
 		err = u.userRepository.UpdateFields(user.ID, fields, db.Mysql)
 		if err != nil {
@@ -110,6 +111,33 @@ func (u *UserService) Login(username, password *string) (token string, err error
 		go u.wsHandler.OnlineStatusNotice(int64(user.ID), onlineStatusNotice)
 	}
 	return token, nil
+}
+
+func (u *UserService) Logout(id uint) {
+	//更新等出时间
+	updates := make(map[string]interface{})
+	updates["logout_time"] = time.Now().Unix()
+	_ = u.userRepository.UpdateFields(id, updates)
+	u.wsHandler.OnlineStatusNotice(int64(id), model.OnlineStatusNotice{
+		UserId:       id,
+		OnlineStatus: model.Offline,
+		ActionType:   model.LogoutAction,
+	})
+}
+
+func (u *UserService) OnlineStatusChange(id uint, onlineStatus model.OnlineStatus) error {
+	updates := make(map[string]interface{})
+	updates["online_status"] = onlineStatus
+	err := u.userRepository.UpdateFields(id, updates)
+	if err != nil {
+		return err
+	}
+	go u.wsHandler.OnlineStatusNotice(int64(id), model.OnlineStatusNotice{
+		UserId:       id,
+		OnlineStatus: onlineStatus,
+		ActionType:   model.StatusChangeAction,
+	})
+	return nil
 }
 
 func (u *UserService) UpdateUser(updateRequest *request.UserUpdateRequest) error {

@@ -8,6 +8,12 @@ const (
 	Enable                // 1 启用
 )
 
+const (
+	Todo   Status = iota // 0 待处理
+	Accept               // 1 接受
+	Reject               // 2 拒绝
+)
+
 // OnlineStatus 在线状态
 type OnlineStatus int
 

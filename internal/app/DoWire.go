@@ -14,6 +14,10 @@ func doWire() {
 	repository.InitMessageRepository()
 	repository.InitGroupRepository()
 	repository.InitGroupMemberRepository()
+	repository.InitFriendRepository()
+	repository.InitFriendRequestRepository()
+	repository.InitFriendGroupRepository()
+
 	//ws
 	wsHandler.InitWebSocketHandler(nil, nil, nil)
 	//service
@@ -22,10 +26,13 @@ func doWire() {
 		repository.GroupMemberRepositoryInstance)
 	service.InitGroupService(repository.GroupRepositoryInstance, repository.MessageRepositoryInstance,
 		repository.UserRepositoryInstance, repository.GroupMemberRepositoryInstance)
+	service.InitFriendService(repository.FriendRepositoryInstance, repository.FriendRequestRepositoryInstance,
+		repository.FriendGroupRepositoryInstance, repository.UserRepositoryInstance, wsHandler.WebSocketHandlerInstance)
 	//controller
 	controllers.InitUserController(service.UserServiceInstance)
 	controllers.InitMessageController(service.MessageServiceInstance)
 	controllers.InitGroupController(service.GroupServiceInstance)
+	controllers.InitFriendController(service.FriendServiceInstance)
 
 	//延迟注入
 	wsHandler.InitWebSocketHandler(service.UserServiceInstance, service.MessageServiceInstance, service.GroupServiceInstance)
