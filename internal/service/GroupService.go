@@ -68,6 +68,7 @@ func (s GroupService) Create(req *request.GroupCreateRequest) error {
 			Name:    req.Name,
 			MaxNum:  req.MaxNum,
 			Code:    code,
+			Avatar:  "https://th.bing.com/th/id/ODF.HcSOJGKbi4khTMFQYDxyIA?w=32&h=32&qlt=90&pcl=fffffa&o=6&pid=1.2",
 			Desc:    "群主很懒,什么也没留下~",
 			Status:  model.Enable,
 		}
@@ -114,7 +115,28 @@ func (s GroupService) Create(req *request.GroupCreateRequest) error {
 
 	return nil
 }
+func (s GroupService) Update(req *request.GroupUpdateRequest) error {
+	// 检查是否存在群组
+	_, err := s.groupRepository.GetByID(req.GroupId)
+	if err != nil {
+		return fmt.Errorf("群组不存在: %v", err)
+	}
+	updates := make(map[string]interface{})
+	if req.Name != nil {
+		updates["name"] = *req.Name
+	}
+	if req.Avatar != nil {
+		updates["avatar"] = *req.Avatar
+	}
+	if req.Desc != nil {
+		updates["desc"] = *req.Desc
+	}
+	if req.MaxNum != nil {
+		updates["max_num"] = *req.MaxNum
+	}
 
+	return s.groupRepository.Update(req.GroupId, updates)
+}
 func (s GroupService) Join(groupId uint, userId uint) error {
 	return db.Mysql.Transaction(func(tx *gorm.DB) error {
 		exists := s.groupMemberRepository.ExistsByGroupIdAndUserId(groupId, userId, tx)

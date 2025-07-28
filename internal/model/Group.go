@@ -9,6 +9,7 @@ type Group struct {
 	gorm.Model
 	Code    string     `json:"code"`        //群号
 	Name    string     `json:"name"`        //群组名称
+	Avatar  string     `json:"avatar"`      //群组头像
 	Desc    string     `json:"description"` //群组简介
 	OwnerId uint       `json:"owner_id"`    //群主ID
 	MaxNum  int        `json:"max_num"`     //群组最大人数

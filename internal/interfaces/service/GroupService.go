@@ -42,4 +42,5 @@ type GroupServiceInterface interface {
 	Dissolve(userId uint, groupId uint) error
 	TransferOwnership(userId uint, req request.GroupTransferRequest) error
 	Mute(userId uint, req request.GroupMuteRequest) error
+	Update(req *request.GroupUpdateRequest) error
 }

@@ -54,7 +54,16 @@ func (con GroupController) Create(c *gin.Context) {
 }
 
 func (con GroupController) Update(c *gin.Context) {
-
+	var req *request.GroupUpdateRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		con.Error(c, err.Error())
+		return
+	}
+	if err := con.groupService.Update(req); err != nil {
+		con.Error(c, err.Error())
+		return
+	}
+	con.Success(c)
 }
 
 // Join 加入群组

@@ -82,6 +82,9 @@ func (g *GroupRepository) Delete(groupID uint, tx ...*gorm.DB) error {
 }
 
 func (g *GroupRepository) Update(groupId uint, m map[string]interface{}, tx ...*gorm.DB) error {
+	if len(m) == 0 {
+		return nil
+	}
 	gormDB := db.GetGormDB(tx...)
 	return gormDB.Model(&model.Group{}).Where("id = ?", groupId).Updates(m).Error
 }

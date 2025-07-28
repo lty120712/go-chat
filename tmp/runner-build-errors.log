@@ -1,2 +1,0 @@
-# go-chat/internal/service
-internal\service\GroupService.go:171:28: s.groupRepository.Update undefined (type "go-chat/internal/interfaces/repository".GroupRepositoryInterface has no field or method Update)
