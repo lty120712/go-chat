@@ -139,3 +139,18 @@ func (r *GroupMemberRepository) RemoveMember(groupId, userId uint, tx ...*gorm.D
 	gormDB := db.GetGormDB(tx...)
 	return gormDB.Where("group_id = ? AND member_id = ?", groupId, userId).Delete(&model.GroupMember{}).Error
 }
+
+func (r *GroupMemberRepository) DeleteByGroupID(groupID uint, tx ...*gorm.DB) error {
+	gormDB := db.GetGormDB(tx...)
+	return gormDB.Where("group_id = ?", groupID).Delete(&model.GroupMember{}).Error
+}
+
+func (r *GroupMemberRepository) Update(groupID, memberID uint, updates map[string]interface{}, tx ...*gorm.DB) error {
+	if len(updates) == 0 {
+		return nil
+	}
+	gormDB := db.GetGormDB(tx...)
+	return gormDB.Model(&model.GroupMember{}).
+		Where("group_id = ? AND member_id = ?", groupID, memberID).
+		Updates(updates).Error
+}

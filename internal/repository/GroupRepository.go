@@ -41,14 +41,6 @@ func (g *GroupRepository) Save(group *model.Group, tx ...*gorm.DB) error {
 	return gormDB.Create(group).Error
 }
 
-func (g *GroupRepository) UpdateRole(member *model.GroupMember, tx ...*gorm.DB) error {
-	gormDB := db.GetGormDB(tx...)
-
-	return gormDB.Model(&model.GroupMember{}).
-		Where("group_id = ? AND member_id = ?", member.GroupId, member.MemberId).
-		Update("role", member.Role).Error
-}
-
 func (g *GroupRepository) Page(req request.GroupSearchRequest, tx ...*gorm.DB) (*pagination.PageResult[model.Group], error) {
 	gormDB := db.GetGormDB(tx...)
 	query := gormDB.Model(&model.Group{})
@@ -59,6 +51,11 @@ func (g *GroupRepository) Page(req request.GroupSearchRequest, tx ...*gorm.DB) (
 	if req.Name != "" {
 		query = query.Where("name LIKE ?", "%"+req.Name+"%")
 	}
+	if req.UserId != 0 {
+		query = query.
+			Joins("JOIN group_members ON group_members.group_id = groups.id").
+			Where("group_members.member_id = ?", req.UserId)
+	}
 	result := &pagination.PageResult[model.Group]{Records: []model.Group{}}
 
 	// 调用分页函数并获取结果
@@ -67,4 +64,24 @@ func (g *GroupRepository) Page(req request.GroupSearchRequest, tx ...*gorm.DB) (
 		return nil, err
 	}
 	return result, nil
+}
+
+func (g *GroupRepository) GetByID(groupID uint, tx ...*gorm.DB) (*model.Group, error) {
+	gormDB := db.GetGormDB(tx...)
+	var group model.Group
+	err := gormDB.First(&group, groupID).Error
+	if err != nil {
+		return nil, err
+	}
+	return &group, nil
+}
+
+func (g *GroupRepository) Delete(groupID uint, tx ...*gorm.DB) error {
+	gormDB := db.GetGormDB(tx...)
+	return gormDB.Delete(&model.Group{}, groupID).Error
+}
+
+func (g *GroupRepository) Update(groupId uint, m map[string]interface{}, tx ...*gorm.DB) error {
+	gormDB := db.GetGormDB(tx...)
+	return gormDB.Model(&model.Group{}).Where("id = ?", groupId).Updates(m).Error
 }

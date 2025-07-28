@@ -25,4 +25,6 @@ type GroupMemberRepositoryInterface interface {
 
 	GetGroupMember(groupId, userId uint, tx ...*gorm.DB) (*model.GroupMember, error)
 	RemoveMember(groupId, userId uint, tx ...*gorm.DB) error
+	DeleteByGroupID(groupID uint, tx ...*gorm.DB) error
+	Update(groupID, memberID uint, updates map[string]interface{}, tx ...*gorm.DB) error
 }

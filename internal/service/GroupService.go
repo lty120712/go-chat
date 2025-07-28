@@ -161,6 +161,19 @@ func (s GroupService) Member(groupId uint) (memberList []response.MemberVo, err 
 	return
 }
 
+func (s GroupService) Mute(userId uint, req request.GroupMuteRequest) error {
+	return db.Mysql.Transaction(func(tx *gorm.DB) error {
+
+		if !s.groupMemberRepository.IsOwner(req.GroupId, userId) {
+			return errors.New("only owner can mute")
+		}
+
+		return s.groupRepository.Update(req.GroupId, map[string]interface{}{
+			"mute_end": req.MuteEnd,
+		})
+	})
+}
+
 // CreateAnnouncement 创建群组公告
 func (s GroupService) CreateAnnouncement(groupId uint, req *request.GroupAnnouncementCreateRequest) error {
 
@@ -306,9 +319,9 @@ func (s GroupService) SetAdmin(operatorId, groupId, memberId uint) error {
 		return errors.New("群主不能被设置为管理员")
 	}
 
-	// 设置角色为管理员 (2)
-	target.Role = 2
-	err = s.groupRepository.UpdateRole(target)
+	err = s.groupMemberRepository.Update(groupId, memberId, map[string]interface{}{
+		"role": model.Admin,
+	})
 	if err != nil {
 		return fmt.Errorf("设置管理员失败: %v", err)
 	}
@@ -336,8 +349,9 @@ func (s GroupService) UnsetAdmin(operatorId, groupId, targetMemberId uint) error
 		return errors.New("该成员不是管理员")
 	}
 
-	target.Role = model.Member // 设置为普通成员
-	return s.groupRepository.UpdateRole(target)
+	return s.groupMemberRepository.Update(groupId, targetMemberId, map[string]interface{}{
+		"role": model.Member,
+	})
 }
 
 func (s GroupService) MuteMember(operatorId, groupId, targetMemberId uint, duration int64) error {
@@ -364,9 +378,9 @@ func (s GroupService) MuteMember(operatorId, groupId, targetMemberId uint, durat
 	}
 
 	muteUntil := time.Now().Add(time.Duration(duration) * time.Second)
-	target.MuteEnd = &muteUntil
-
-	return s.groupRepository.UpdateRole(target)
+	return s.groupMemberRepository.Update(groupId, targetMemberId, map[string]interface{}{
+		"mute_end": muteUntil,
+	})
 }
 
 func (s GroupService) UnmuteMember(operatorId, groupId, targetId uint) error {
@@ -395,12 +409,12 @@ func (s GroupService) UnmuteMember(operatorId, groupId, targetId uint) error {
 		return errors.New("管理员不能解除管理员禁言")
 	}
 
-	target.MuteEnd = nil
-
-	return s.groupRepository.UpdateRole(target)
+	return s.groupMemberRepository.Update(groupId, targetId, map[string]interface{}{
+		"mute_end": nil,
+	})
 }
 
-func (s GroupService) Page(req request.GroupSearchRequest) (*pagination.PageResult[model.Group], error) {
+func (s GroupService) Search(req request.GroupSearchRequest) (*pagination.PageResult[model.Group], error) {
 
 	if req.Page <= 0 {
 		req.Page = 1
@@ -410,4 +424,68 @@ func (s GroupService) Page(req request.GroupSearchRequest) (*pagination.PageResu
 	}
 	res, err := s.groupRepository.Page(req)
 	return res, err
+}
+func (s GroupService) Dissolve(userId uint, groupId uint) error {
+
+	group, err := s.groupRepository.GetByID(groupId)
+	if err != nil {
+		return fmt.Errorf("获取群组信息失败: %w", err)
+	}
+	if group == nil {
+		return errors.New("群组不存在")
+	}
+	if group.OwnerId != userId {
+		return errors.New("无权限：只有群主可以解散群组")
+	}
+	err = db.Mysql.Transaction(func(tx *gorm.DB) error {
+		if err := s.groupRepository.Delete(groupId, tx); err != nil {
+			return err
+		}
+		if err := s.groupMemberRepository.DeleteByGroupID(groupId, tx); err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("解散群组失败: %w", err)
+	}
+	//todo 发送通知
+
+	return nil
+}
+
+func (s GroupService) TransferOwnership(userId uint, req request.GroupTransferRequest) error {
+	return db.Mysql.Transaction(func(tx *gorm.DB) error {
+		// 1. 校验群是否存在且 userId 是群主
+		group, err := s.groupRepository.GetByID(req.GroupID, tx)
+		if err != nil {
+			return err
+		}
+		if group.OwnerId != userId {
+			return errors.New("只有群主可以转移群主权限")
+		}
+
+		isMember := s.groupMemberRepository.ExistsByGroupIdAndUserId(req.GroupID, req.NewOwnerID, tx)
+		if !isMember {
+			return errors.New("新群主不是该群成员")
+		}
+
+		group.OwnerId = req.NewOwnerID
+		if err := s.groupRepository.Save(group, tx); err != nil {
+			return err
+		}
+
+		if err := s.groupMemberRepository.Update(req.GroupID, userId, map[string]interface{}{
+			"role": model.Member,
+		}, tx); err != nil {
+			return err
+		}
+		if err := s.groupMemberRepository.Update(req.GroupID, req.NewOwnerID, map[string]interface{}{
+			"role": model.Owner,
+		}, tx); err != nil {
+			return err
+		}
+
+		return nil
+	})
 }

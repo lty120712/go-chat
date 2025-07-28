@@ -44,12 +44,14 @@ func MessageApi(r *gin.Engine) {
 func GroupApi(r *gin.Engine) {
 	groupApi := r.Group(configs.AppConfig.Api.Prefix+"/group", middleware.AuthMiddleware())
 	{
+		// 群聊相关
 		groupApi.POST("/create", controllers.GroupControllerInstance.Create)
 		groupApi.POST("/update", controllers.GroupControllerInstance.Update)
 		groupApi.GET("/join", controllers.GroupControllerInstance.Join)
 		groupApi.GET("/quit", controllers.GroupControllerInstance.Quit)
 		groupApi.POST("/search", controllers.GroupControllerInstance.Search)
 		groupApi.GET("/member", controllers.GroupControllerInstance.Member)
+		groupApi.POST("/mute", controllers.GroupControllerInstance.Mute)
 
 		// 群公告相关
 		groupApi.POST("/:group_id/announcement/create", controllers.GroupControllerInstance.CreateAnnouncement)
@@ -64,6 +66,8 @@ func GroupApi(r *gin.Engine) {
 		groupApi.POST("/:group_id/unset_admin", controllers.GroupControllerInstance.UnsetAdmin)
 		groupApi.POST("/:group_id/mute", controllers.GroupControllerInstance.MuteMember)
 		groupApi.POST("/:group_id/unmute", controllers.GroupControllerInstance.UnmuteMember)
+		groupApi.POST("/:group_id/dissolve", controllers.GroupControllerInstance.Dissolve)
+		groupApi.POST("/:group_id/transfer", controllers.GroupControllerInstance.Transfer)
 	}
 }
 

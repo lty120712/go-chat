@@ -38,5 +38,8 @@ type GroupServiceInterface interface {
 
 	MuteMember(operatorId, groupId, targetMemberId uint, duration int64) error
 	UnmuteMember(operatorId, groupId, memberId uint) error
-	Page(req request.GroupSearchRequest) (*pagination.PageResult[model.Group], error)
+	Search(req request.GroupSearchRequest) (*pagination.PageResult[model.Group], error)
+	Dissolve(userId uint, groupId uint) error
+	TransferOwnership(userId uint, req request.GroupTransferRequest) error
+	Mute(userId uint, req request.GroupMuteRequest) error
 }

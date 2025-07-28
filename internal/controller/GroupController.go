@@ -118,7 +118,7 @@ func (con GroupController) Search(c *gin.Context) {
 		return
 	}
 
-	resp, err := con.groupService.Page(req)
+	resp, err := con.groupService.Search(req)
 	if err != nil {
 		con.Error(c, err.Error())
 		return
@@ -269,8 +269,9 @@ func (con GroupController) KickMember(c *gin.Context) {
 	}
 
 	userId := c.GetUint("id")
-
-	if err := con.groupService.KickMember(userId, req.GroupID, req.MemberID); err != nil {
+	groupIdStr := c.Param("group_id")
+	groupId, _ := strconv.ParseUint(groupIdStr, 10, 64)
+	if err := con.groupService.KickMember(userId, uint(groupId), req.MemberID); err != nil {
 		con.Error(c, err.Error())
 		return
 	}
@@ -286,8 +287,9 @@ func (con GroupController) SetAdmin(c *gin.Context) {
 	}
 
 	userId := c.GetUint("id")
-
-	if err := con.groupService.SetAdmin(userId, req.GroupID, req.MemberID); err != nil {
+	groupIdStr := c.Param("group_id")
+	groupId, _ := strconv.ParseUint(groupIdStr, 10, 64)
+	if err := con.groupService.SetAdmin(userId, uint(groupId), req.MemberID); err != nil {
 		con.Error(c, err.Error())
 		return
 	}
@@ -304,12 +306,7 @@ func (con GroupController) UnsetAdmin(c *gin.Context) {
 
 	operatorId := c.GetUint("id")
 	groupIdStr := c.Param("group_id")
-	groupId, err := strconv.ParseUint(groupIdStr, 10, 64)
-	if err != nil {
-		con.Error(c, "无效的 group_id")
-		return
-	}
-
+	groupId, _ := strconv.ParseUint(groupIdStr, 10, 64)
 	if err := con.groupService.UnsetAdmin(operatorId, uint(groupId), req.MemberID); err != nil {
 		con.Error(c, err.Error())
 		return
@@ -319,7 +316,7 @@ func (con GroupController) UnsetAdmin(c *gin.Context) {
 }
 
 func (con GroupController) MuteMember(c *gin.Context) {
-	var req request.MuteMemberRequest
+	var req request.GroupMemberMuteRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		con.Error(c, err.Error())
 		return
@@ -327,11 +324,7 @@ func (con GroupController) MuteMember(c *gin.Context) {
 
 	operatorId := c.GetUint("id")
 	groupIdStr := c.Param("group_id")
-	groupId, err := strconv.ParseUint(groupIdStr, 10, 64)
-	if err != nil {
-		con.Error(c, "无效的 group_id")
-		return
-	}
+	groupId, _ := strconv.ParseUint(groupIdStr, 10, 64)
 
 	if err := con.groupService.MuteMember(operatorId, uint(groupId), req.MemberID, req.Duration); err != nil {
 		con.Error(c, err.Error())
@@ -348,9 +341,51 @@ func (con GroupController) UnmuteMember(c *gin.Context) {
 		return
 	}
 	userId := c.GetUint("id")
-	groupId := c.GetUint("group_id")
+	groupIdStr := c.Param("group_id")
+	groupId, _ := strconv.Atoi(groupIdStr)
 
-	if err := con.groupService.UnmuteMember(userId, groupId, req.MemberID); err != nil {
+	if err := con.groupService.UnmuteMember(userId, uint(groupId), req.MemberID); err != nil {
+		con.Error(c, err.Error())
+		return
+	}
+	con.Success(c)
+}
+
+func (con GroupController) Dissolve(c *gin.Context) {
+	groupIdStr := c.Param("group_id")
+	groupId, _ := strconv.Atoi(groupIdStr)
+	userId := c.GetUint("id")
+	if err := con.groupService.Dissolve(userId, uint(groupId)); err != nil {
+		con.Error(c, err.Error())
+		return
+	}
+	con.Success(c)
+}
+
+func (con GroupController) Transfer(c *gin.Context) {
+	var req request.GroupTransferRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		con.Error(c, err.Error())
+		return
+	}
+	userId := c.GetUint("id")
+	err := con.groupService.TransferOwnership(userId, req)
+	if err != nil {
+		con.Error(c, err.Error())
+		return
+	}
+
+	con.Success(c)
+}
+
+func (con GroupController) Mute(c *gin.Context) {
+	var req request.GroupMuteRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		con.Error(c, err.Error())
+		return
+	}
+	userId := c.GetUint("id")
+	if err := con.groupService.Mute(userId, req); err != nil {
 		con.Error(c, err.Error())
 		return
 	}
