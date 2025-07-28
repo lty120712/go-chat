@@ -17,7 +17,7 @@ func doWire() {
 	repository.InitFriendRepository()
 	repository.InitFriendRequestRepository()
 	repository.InitFriendGroupRepository()
-
+	repository.InitGroupAnnouncementRepository()
 	//ws
 	wsHandler.InitWebSocketHandler(nil, nil, nil)
 	//service
@@ -25,7 +25,7 @@ func doWire() {
 	service.InitMessageService(repository.MessageRepositoryInstance, repository.UserRepositoryInstance,
 		repository.GroupMemberRepositoryInstance)
 	service.InitGroupService(repository.GroupRepositoryInstance, repository.MessageRepositoryInstance,
-		repository.UserRepositoryInstance, repository.GroupMemberRepositoryInstance)
+		repository.UserRepositoryInstance, repository.GroupMemberRepositoryInstance, repository.GroupAnnouncementRepositoryInstance)
 	service.InitFriendService(repository.FriendRepositoryInstance, repository.FriendRequestRepositoryInstance,
 		repository.FriendGroupRepositoryInstance, repository.UserRepositoryInstance, wsHandler.WebSocketHandlerInstance)
 	//controller

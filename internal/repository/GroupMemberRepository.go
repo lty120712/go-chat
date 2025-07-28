@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	"go-chat/internal/db"
 	"go-chat/internal/model"
 	response "go-chat/internal/model/response"
@@ -69,7 +70,7 @@ func (r *GroupMemberRepository) GetMemberListByGroupId(groupId uint, tx ...*gorm
 	var memberList []response.MemberVo
 
 	err := gormDB.Table("group_members as gm").
-		Select("gm.group_id, gm.member_id AS user_id, IFNULL(gm.g_nick_name, u.nickname) AS nickname, gm.role,u.avatar, u.online_status").
+		Select("gm.group_id, gm.member_id AS user_id, IFNULL(gm.g_nick_name, u.nickname) AS nickname, gm.mute_end,gm.role,u.avatar,u.online_status").
 		Joins("JOIN users u ON gm.member_id = u.id").
 		Where("gm.group_id = ?", groupId).
 		Order("u.online_status DESC").
@@ -93,8 +94,8 @@ func (r *GroupMemberRepository) IsOwner(groupId uint, memberId uint, tx ...*gorm
 	}
 	return false
 }
-func (r *GroupMemberRepository) GetRelatedMemberByUserId(id uint) (memberList []response.MemberVo, err error) {
-	gormDB := db.GetGormDB()
+func (r *GroupMemberRepository) GetRelatedMemberByUserId(id uint, tx ...*gorm.DB) (memberList []response.MemberVo, err error) {
+	gormDB := db.GetGormDB(tx...)
 
 	var groupIds []uint
 	err = gormDB.Model(&model.GroupMember{}).
@@ -123,4 +124,18 @@ func (r *GroupMemberRepository) GetRelatedMemberByUserId(id uint) (memberList []
 	}
 
 	return memberList, nil
+}
+func (r *GroupMemberRepository) GetGroupMember(groupId, userId uint, tx ...*gorm.DB) (*model.GroupMember, error) {
+	gormDB := db.GetGormDB(tx...)
+	var gm model.GroupMember
+	err := gormDB.Where("group_id = ? AND member_id = ?", groupId, userId).First(&gm).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	return &gm, err
+}
+
+func (r *GroupMemberRepository) RemoveMember(groupId, userId uint, tx ...*gorm.DB) error {
+	gormDB := db.GetGormDB(tx...)
+	return gormDB.Where("group_id = ? AND member_id = ?", groupId, userId).Delete(&model.GroupMember{}).Error
 }

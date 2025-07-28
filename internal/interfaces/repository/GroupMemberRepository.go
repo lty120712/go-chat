@@ -21,5 +21,8 @@ type GroupMemberRepositoryInterface interface {
 
 	IsOwner(groupId uint, memberId uint, tx ...*gorm.DB) bool
 
-	GetRelatedMemberByUserId(id uint) (memberList []response.MemberVo, err error)
+	GetRelatedMemberByUserId(id uint, tx ...*gorm.DB) (memberList []response.MemberVo, err error)
+
+	GetGroupMember(groupId, userId uint, tx ...*gorm.DB) (*model.GroupMember, error)
+	RemoveMember(groupId, userId uint, tx ...*gorm.DB) error
 }

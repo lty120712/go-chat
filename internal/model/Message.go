@@ -2,7 +2,6 @@ package model
 
 import (
 	"database/sql/driver"
-	"encoding/json"
 	"go-chat/internal/utils/jsonUtil"
 	"gorm.io/gorm"
 )
@@ -19,7 +18,7 @@ type Message struct {
 	Content      *MessagePartList `json:"content" gorm:"type:json;comment:富文本消息内容"`         // 消息内容片段数组（JSON）
 	Type         *MessageType     `json:"type" gorm:"not null;comment:消息类型"`                // 消息类型（文本、图片、红包等）
 	Status       *Status          `json:"status" gorm:"not null;comment:消息状态"`              // 消息状态（0=撤回，1=正常）
-	ExtraData    *json.RawMessage `json:"extra_data" gorm:"type:json;comment:扩展字段"`         // 扩展字段（如红包、投票等结构）
+	ExtraData    interface{}      `json:"extra_data" gorm:"type:json;comment:扩展字段"`         // 扩展字段（如红包、投票等结构）
 }
 
 func (m *Message) TableName() string {

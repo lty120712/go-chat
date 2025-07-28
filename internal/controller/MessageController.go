@@ -27,7 +27,7 @@ func InitMessageController(messageService interfacesservice.MessageServiceInterf
 // SendString 发送消息接口
 // @Summary 发送消息
 // @Description 发送消息到指定队列，消息体为 JSON 格式
-// @Tags message
+// @Tags Message
 // @Accept json
 // @Produce json
 // @Param msg body map[string]interface{} true "消息内容"
@@ -54,7 +54,7 @@ func (con MessageController) SendString(c *gin.Context) {
 // SendJson 发送消息接口
 // @Summary 发送消息
 // @Description 发送消息到指定队列，消息体为 JSON 格式
-// @Tags message
+// @Tags Message
 // @Accept json
 // @Produce json
 // @Param msg body map[string]interface{} true "消息内容"
@@ -80,7 +80,7 @@ func (con MessageController) SendJson(c *gin.Context) {
 // SendJson 已读消息接口
 // @Summary 已读消息
 // @Description 对该条消息已读
-// @Tags message
+// @Tags Message
 // @Accept json
 // @Produce json
 // @Param msg body model.ReadMessageReq true "消息内容"

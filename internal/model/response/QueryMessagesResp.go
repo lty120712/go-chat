@@ -1,7 +1,6 @@
 package model
 
 import (
-	"encoding/json"
 	"go-chat/internal/model"
 	"time"
 )
@@ -26,7 +25,7 @@ type MessageVo struct {
 	Content      *model.MessagePartList
 	Type         *model.MessageType
 	Status       *model.Status
-	ExtraData    *json.RawMessage
+	ExtraData    interface{} `json:"extra_data" gorm:"type:json;comment:扩展字段"` // 扩展字段（如红包、投票等结构）
 	//额外信息
 	SenderNickName     *string
 	SenderAvatar       *string

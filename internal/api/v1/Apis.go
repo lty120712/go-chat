@@ -50,6 +50,20 @@ func GroupApi(r *gin.Engine) {
 		groupApi.GET("/quit", controllers.GroupControllerInstance.Quit)
 		groupApi.POST("/search", controllers.GroupControllerInstance.Search)
 		groupApi.GET("/member", controllers.GroupControllerInstance.Member)
+
+		// 群公告相关
+		groupApi.POST("/:group_id/announcement/create", controllers.GroupControllerInstance.CreateAnnouncement)
+		groupApi.POST("/:group_id/announcement/update", controllers.GroupControllerInstance.UpdateAnnouncement)
+		groupApi.GET("/:group_id/announcement/delete", controllers.GroupControllerInstance.DeleteAnnouncement)
+		groupApi.GET("/:group_id/announcement", controllers.GroupControllerInstance.GetAnnouncement)
+		groupApi.GET("/:group_id/announcement_list", controllers.GroupControllerInstance.GetAnnouncementList)
+
+		// 群聊权限相关
+		groupApi.POST("/:group_id/kick", controllers.GroupControllerInstance.KickMember)
+		groupApi.POST("/:group_id/set_admin", controllers.GroupControllerInstance.SetAdmin)
+		groupApi.POST("/:group_id/unset_admin", controllers.GroupControllerInstance.UnsetAdmin)
+		groupApi.POST("/:group_id/mute", controllers.GroupControllerInstance.MuteMember)
+		groupApi.POST("/:group_id/unmute", controllers.GroupControllerInstance.UnmuteMember)
 	}
 }
 
