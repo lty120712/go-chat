@@ -51,6 +51,7 @@ const (
 	RedBagContent //红包
 
 	ForwardedCotent //转发
+	SystemContent   //系统消息
 )
 
 type TargetType int
