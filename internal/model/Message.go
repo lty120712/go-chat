@@ -49,6 +49,8 @@ const (
 	VoiceContent // 语音
 
 	RedBagContent //红包
+
+	ForwardedCotent //转发
 )
 
 type TargetType int

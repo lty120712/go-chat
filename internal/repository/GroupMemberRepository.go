@@ -94,6 +94,19 @@ func (r *GroupMemberRepository) IsOwner(groupId uint, memberId uint, tx ...*gorm
 	}
 	return false
 }
+
+func (r *GroupMemberRepository) IsOwnerOrAdmin(groupId uint, memberId uint, tx ...*gorm.DB) bool {
+	gormDB := db.GetGormDB(tx...)
+	var groupMember model.GroupMember
+
+	err := gormDB.Model(&model.GroupMember{}).
+		Where("group_id = ? AND member_id = ? AND (role = ? OR role =?)", groupId, memberId, model.Owner, model.Admin). // 检查是否为群主
+		First(&groupMember).Error
+	if err == nil {
+		return true
+	}
+	return false
+}
 func (r *GroupMemberRepository) GetRelatedMemberByUserId(id uint, tx ...*gorm.DB) (memberList []response.MemberVo, err error) {
 	gormDB := db.GetGormDB(tx...)
 

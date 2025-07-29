@@ -26,20 +26,22 @@ func Start() {
 	db.InitRedis()
 	//配置logrus
 	logrus.SetFormatter(&logrus.TextFormatter{ForceColors: true})
-	//配置依赖注入
-	doWire()
 	//配置路由基本信息
 	router := gin.Default()
 	// 配置swagger
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	//配置路由
-	apiv1.InitRouter(router)
+	//配置Minio
+	manager.InitMinIO()
 	//配置rabbitmq
 	manager.InitRabbitMQ()
 	//配置WebSocket
 	manager.InitWebSocket()
 	//配置定时任务
 	timer.InitTimer()
+	//配置依赖注入 要在倒数第二步
+	doWire()
+	//配置路由 要在最后一步
+	apiv1.InitRouter(router)
 	//启动服务
 	router.Run(fmt.Sprintf(":%d", configs.AppConfig.Server.Port))
 }

@@ -6,6 +6,7 @@ import (
 	interfacesservice "go-chat/internal/interfaces/service"
 	"go-chat/internal/manager"
 	request "go-chat/internal/model/request"
+	"strconv"
 )
 
 // MessageController 消息相关控制器
@@ -118,7 +119,6 @@ func (con MessageController) Query(c *gin.Context) {
 		con.Error(c, err.Error())
 		return
 	}
-	//userid来自中间件
 	idStr, _ := c.Get("id")
 	id := idStr.(uint)
 	if data, err := con.messageService.QueryMessages(id, &req); err != nil {
@@ -127,4 +127,15 @@ func (con MessageController) Query(c *gin.Context) {
 	} else {
 		con.Success(c, data)
 	}
+}
+
+func (con MessageController) Revoke(c *gin.Context) {
+	messageIdStr := c.Param("id")
+	messageId, _ := strconv.Atoi(messageIdStr)
+	userId := c.GetUint("id")
+	if err := con.messageService.Revoke(userId, uint(messageId)); err != nil {
+		con.Error(c, err.Error())
+		return
+	}
+	con.Success(c)
 }

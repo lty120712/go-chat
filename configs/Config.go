@@ -63,6 +63,14 @@ type MqConfig struct {
 	Handler    string `yaml:"handler"`
 }
 
+type MinioConfig struct {
+	Endpoint  string `yaml:"endpoint"`
+	AccessKey string `yaml:"accessKey"`
+	SecretKey string `yaml:"secretKey"`
+	Bucket    string `yaml:"bucket"`
+	BaseUrl   string `yaml:"baseUrl"`
+}
+
 // Config 配置结构体 整个文件
 type Config struct {
 	Server   ServerConfig   `yaml:"server"`
@@ -73,6 +81,7 @@ type Config struct {
 	Rate     RateConfig     `yaml:"rate"`
 	Rabbitmq RabbitmqConfig `yaml:"rabbitmq"`
 	Mq       []MqConfig     `yaml:"mq"`
+	Minio    MinioConfig    `yaml:"minio"`
 }
 
 var appConfigPath = "configs"

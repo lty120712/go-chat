@@ -20,7 +20,7 @@ type GroupMemberRepositoryInterface interface {
 	GetMemberListByGroupId(groupId uint, tx ...*gorm.DB) ([]response.MemberVo, error)
 
 	IsOwner(groupId uint, memberId uint, tx ...*gorm.DB) bool
-
+	IsOwnerOrAdmin(groupId uint, memberId uint, tx ...*gorm.DB) bool
 	GetRelatedMemberByUserId(id uint, tx ...*gorm.DB) (memberList []response.MemberVo, err error)
 
 	GetGroupMember(groupId, userId uint, tx ...*gorm.DB) (*model.GroupMember, error)

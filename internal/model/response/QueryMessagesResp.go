@@ -26,7 +26,9 @@ type MessageVo struct {
 	Type         *model.MessageType
 	Status       *model.Status
 	ExtraData    interface{} `json:"extra_data" gorm:"type:json;comment:扩展字段"` // 扩展字段（如红包、投票等结构）
+
 	//额外信息
+	Reply              *MessageVo `json:"reply"`
 	SenderNickName     *string
 	SenderAvatar       *string
 	SenderOnlineStatus *model.OnlineStatus

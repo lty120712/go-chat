@@ -16,4 +16,5 @@ type MessageServiceInterface interface {
 	ReadMessage(messageId uint, userId uint) error
 
 	QueryMessages(userId uint, req *request.QueryMessagesRequest) (*response.QueryMessagesResponse, error)
+	Revoke(userId uint, messageId uint) error
 }

@@ -15,6 +15,7 @@ func InitRouter(r *gin.Engine) {
 	MessageApi(r)
 	GroupApi(r)
 	FriendApi(r)
+	FileApi(r)
 }
 
 func UserApi(r *gin.Engine) {
@@ -38,6 +39,7 @@ func MessageApi(r *gin.Engine) {
 		messageApi.POST("/send/json", controllers.MessageControllerInstance.SendJson)
 		messageApi.POST("/read", controllers.MessageControllerInstance.Read)
 		messageApi.POST("/query", controllers.MessageControllerInstance.Query)
+		messageApi.GET("/:id/revoke", controllers.MessageControllerInstance.Revoke)
 	}
 }
 
@@ -82,5 +84,12 @@ func FriendApi(r *gin.Engine) {
 		friendApi.GET("/group_delete", controllers.FriendControllerInstance.GroupDelete)  //删除好友分组
 		friendApi.POST("/group_update", controllers.FriendControllerInstance.GroupUpdate) //修改好友分组
 		friendApi.GET("/group_list", controllers.FriendControllerInstance.GroupList)      //查询好友分组列表
+	}
+}
+
+func FileApi(r *gin.Engine) {
+	fileApi := r.Group(configs.AppConfig.Api.Prefix+"/file", middleware.AuthMiddleware())
+	{
+		fileApi.POST("/upload", controllers.FileControllerInstance.Upload)
 	}
 }

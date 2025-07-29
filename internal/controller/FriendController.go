@@ -43,6 +43,7 @@ func (con *FriendController) Add(c *gin.Context) {
 		con.Error(c, err.Error())
 		return
 	}
+
 	con.Success(c)
 }
 
