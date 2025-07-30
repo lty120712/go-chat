@@ -2,9 +2,9 @@ server:
   port: 8080
 
 database:
-  username: 8.137.38.55
+  username: root
   password: lty120712
-  host: localhost
+  host: 8.137.38.55
   port: 3306
   dbname: go-chat
 
