@@ -2,7 +2,7 @@ server:
   port: 8080
 
 database:
-  username: root
+  username: 8.137.38.55
   password: lty120712
   host: localhost
   port: 3306
@@ -18,6 +18,9 @@ database:
 #  dialTimeout: 10s    # 连接超时
 #  readTimeout: 3s     # 读取超时
 #  writeTimeout: 3s    # 写入超时
+
+websocket:
+  addr: :9091
 
 api:
   prefix: /api/v1
@@ -55,3 +58,4 @@ minio:
   secretKey: minioadmin
   bucket: go-chat
   baseUrl: http://8.137.38.55:9000
+

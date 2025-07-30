@@ -11,11 +11,92 @@
  Target Server Version : 80039 (8.0.39)
  File Encoding         : 65001
 
- Date: 24/07/2025 15:56:30
+ Date: 30/07/2025 14:41:36
 */
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
+
+-- ----------------------------
+-- Table structure for files
+-- ----------------------------
+DROP TABLE IF EXISTS `files`;
+CREATE TABLE `files`  (
+  `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id` bigint UNSIGNED NOT NULL COMMENT '上传的用户ID',
+  `type` enum('image','audio','video','file') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '文件类型',
+  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '文件原始名称',
+  `ext` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '扩展名，如 jpg/mp3/mp4/zip',
+  `mime` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT 'MIME类型，如 image/png',
+  `size` bigint UNSIGNED NOT NULL COMMENT '文件大小（字节）',
+  `url` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '文件访问URL',
+  `width` int UNSIGNED NULL DEFAULT NULL COMMENT '图片/视频宽度(px)',
+  `height` int UNSIGNED NULL DEFAULT NULL COMMENT '图片/视频高度(px)',
+  `duration` float NULL DEFAULT NULL COMMENT '时长，单位秒（音视频）',
+  `created_at` timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `updated_at` timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+  `deleted_at` timestamp(3) NULL DEFAULT NULL,
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '通用文件存储表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for friend_groups
+-- ----------------------------
+DROP TABLE IF EXISTS `friend_groups`;
+CREATE TABLE `friend_groups`  (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `user_id` bigint NOT NULL,
+  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
+  `friend_id_list` json NULL,
+  `created_at` datetime NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted_at` datetime NULL DEFAULT NULL,
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for friend_requests
+-- ----------------------------
+DROP TABLE IF EXISTS `friend_requests`;
+CREATE TABLE `friend_requests`  (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `user_id` bigint NOT NULL,
+  `friend_id` bigint NOT NULL,
+  `status` int NULL DEFAULT 0,
+  `created_at` datetime NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted_at` datetime NULL DEFAULT NULL,
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for friends
+-- ----------------------------
+DROP TABLE IF EXISTS `friends`;
+CREATE TABLE `friends`  (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `user_id` bigint NOT NULL,
+  `friend_id` bigint NOT NULL,
+  `created_at` datetime NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted_at` datetime NULL DEFAULT NULL,
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Table structure for group_announcements
+-- ----------------------------
+DROP TABLE IF EXISTS `group_announcements`;
+CREATE TABLE `group_announcements`  (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `group_id` bigint NOT NULL,
+  `content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL,
+  `publisher` bigint NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for group_members
@@ -30,7 +111,7 @@ CREATE TABLE `group_members`  (
   `member_id` bigint NOT NULL COMMENT '成员ID',
   `g_nick_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '群昵称',
   `role` int NOT NULL DEFAULT 0 COMMENT '成员角色（0=普通成员，1=群主，2=管理员）',
-  `status` int NOT NULL DEFAULT 1 COMMENT '成员状态(0禁言1正常)',
+  `mute_end` timestamp NULL DEFAULT NULL COMMENT '禁言截至时间，null未禁言',
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 18 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '群组成员表' ROW_FORMAT = Dynamic;
 
@@ -46,8 +127,10 @@ CREATE TABLE `groups`  (
   `code` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '群号',
   `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '群组名称',
   `max_num` int NULL DEFAULT NULL COMMENT '最大人数',
+  `avatar` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '群头像',
   `desc` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '群组简介',
   `owner_id` bigint NOT NULL COMMENT '群主ID',
+  `mute_end` timestamp NULL DEFAULT NULL COMMENT '禁言截至时间',
   `status` int NOT NULL DEFAULT 1 COMMENT '群组状态（1=正常，0=关闭）',
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '群组表' ROW_FORMAT = Dynamic;
@@ -73,7 +156,7 @@ CREATE TABLE `messages`  (
   `extra_data` json NULL COMMENT '扩展字段',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_messages_deleted_at`(`deleted_at` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 27 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '聊天消息表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 32 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '聊天消息表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for users
@@ -105,6 +188,33 @@ CREATE TABLE `users`  (
   INDEX `idx_phone`(`phone` ASC) USING BTREE,
   INDEX `idx_online_status`(`online_status` ASC) USING BTREE,
   INDEX `idx_deleted_at`(`deleted_at` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 1007 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Procedure structure for GenerateTestUsers
+-- ----------------------------
+DROP PROCEDURE IF EXISTS `GenerateTestUsers`;
+delimiter ;;
+CREATE PROCEDURE `GenerateTestUsers`()
+BEGIN
+    DECLARE i INT DEFAULT 0;
+
+    WHILE i < 1000 DO
+            INSERT INTO users (username, password, nickname, email, phone, status, online_status)
+            VALUES (
+                       CONCAT('user', i),                                  -- username: user0, user1, ...
+                       CONCAT('password', i),                              -- password: password0, password1, ...
+                       CONCAT('nickname', i),                              -- nickname: nickname0, nickname1, ...
+                       CONCAT('user', i, '@test.com'),                     -- email: user0@test.com, user1@test.com, ...
+                       CONCAT('100000000', LPAD(i, 3, '0')),               -- phone: 100000000000, 100000000001, ...
+                       IF(i % 2 = 0, 1, 0),                                -- status: 1 (active), 0 (inactive)
+                       IF(i % 2 = 0, 1, 0)                                 -- online_status: 1 (online), 0 (offline)
+                   );
+
+            SET i = i + 1;
+        END WHILE;
+END
+;;
+delimiter ;
 
 SET FOREIGN_KEY_CHECKS = 1;

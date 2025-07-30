@@ -18,7 +18,8 @@ database:
 #  dialTimeout: 10s    # 连接超时
 #  readTimeout: 3s     # 读取超时
 #  writeTimeout: 3s    # 写入超时
-
+websocket:
+  addr: :80
 api:
   prefix: /api/v1
 

@@ -102,7 +102,6 @@ func (u *UserService) Login(username, password *string) (token string, err error
 		if err != nil {
 			return "", err
 		}
-		//todo 2.ws通知与我相关的好友或群组在线状态
 		onlineStatusNotice := model.OnlineStatusNotice{
 			UserId:       user.ID,
 			OnlineStatus: model.Online,

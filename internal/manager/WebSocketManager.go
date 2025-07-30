@@ -9,7 +9,7 @@ import (
 	"strconv"
 )
 
-// 初始化 WebSocket
+// InitWebSocket 初始化 WebSocket
 func InitWebSocket() {
 	wsClient.WebSocketClient = &wsClient.WebSocketManager{
 		Upgrader: websocket.Upgrader{
