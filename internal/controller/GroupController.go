@@ -53,6 +53,17 @@ func (con GroupController) Create(c *gin.Context) {
 	con.Success(c)
 }
 
+// Update 更新群组
+// @Summary 更新群组信息
+// @Description 更新群组的名称、描述等信息
+// @Tags Group
+// @Accept json
+// @Produce json
+// @Param group body model.GroupUpdateRequest true "更新群组信息"  // 更新请求数据
+// @Success 200 {object} model.Response "群组更新成功"  // 更新成功响应
+// @Failure 400 {object} model.Response "请求参数错误"  // 参数错误
+// @Failure 500 {object} model.Response "内部服务器错误"  // 服务器错误
+// @Router /group/update [post]
 func (con GroupController) Update(c *gin.Context) {
 	var req *request.GroupUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -119,6 +130,17 @@ func (con GroupController) Quit(c *gin.Context) {
 	con.Success(c)
 }
 
+// Search 搜索群组
+// @Summary 搜索群组
+// @Description 搜索群组并返回搜索结果
+// @Tags Group
+// @Accept json
+// @Produce json
+// @Param data body model.GroupSearchRequest true "搜索群组请求参数"  // 搜索请求参数
+// @Success 200 {object} model.Response{data=[]model.GroupVo} "群组搜索结果"  // 返回搜索到的群组列表
+// @Failure 400 {object} model.Response "请求参数错误"  // 参数错误
+// @Failure 500 {object} model.Response "内部服务器错误"  // 服务器错误
+// @Router /group/search [post]
 func (con GroupController) Search(c *gin.Context) {
 	var req request.GroupSearchRequest
 	err := c.ShouldBindJSON(&req)
@@ -136,6 +158,17 @@ func (con GroupController) Search(c *gin.Context) {
 	con.Success(c, resp)
 }
 
+// Member 获取群组成员
+// @Summary 获取群组成员
+// @Description 获取指定群组的所有成员
+// @Tags Group
+// @Accept json
+// @Produce json
+// @Param group_id query uint true "群组ID"  // 群组ID
+// @Success 200 {object} model.Response{data=[]model.MemberVo} "群组成员列表"  // 返回群组成员列表
+// @Failure 400 {object} model.Response "请求参数错误"  // 参数错误
+// @Failure 500 {object} model.Response "内部服务器错误"  // 服务器错误
+// @Router /group/member [get]
 func (con GroupController) Member(c *gin.Context) {
 	groupIdStr := c.Query("group_id")
 	groupId, _ := strconv.ParseUint(groupIdStr, 10, 64)
@@ -212,7 +245,7 @@ func (con GroupController) UpdateAnnouncement(c *gin.Context) {
 // @Param group_id path int true "群组ID"
 // @Param announcement_id query int true "公告ID"
 // @Success 200 {object} model.Response
-// @Router /group/{group_id}/announcement/delete [delete]
+// @Router /group/{group_id}/announcement/delete [get]
 func (con GroupController) DeleteAnnouncement(c *gin.Context) {
 	groupIdStr := c.Param("group_id")
 	groupId, _ := strconv.Atoi(groupIdStr)
@@ -234,7 +267,7 @@ func (con GroupController) DeleteAnnouncement(c *gin.Context) {
 // @Tags Group
 // @Produce json
 // @Param group_id path int true "群组ID"
-// @Success 200 {object} model.Response{data=response.GroupAnnouncement}
+// @Success 200 {object} model.Response
 // @Router /group/{group_id}/announcement [get]
 func (con GroupController) GetAnnouncement(c *gin.Context) {
 	groupIdStr := c.Param("group_id")
@@ -255,7 +288,7 @@ func (con GroupController) GetAnnouncement(c *gin.Context) {
 // @Tags Group
 // @Produce json
 // @Param group_id path int true "群组ID"
-// @Success 200 {object} model.Response{data=[]response.GroupAnnouncement}
+// @Success 200 {object} model.Response
 // @Router /group/{group_id}/announcement_list [get]
 func (con GroupController) GetAnnouncementList(c *gin.Context) {
 	groupIdStr := c.Param("group_id")
@@ -270,6 +303,18 @@ func (con GroupController) GetAnnouncementList(c *gin.Context) {
 	con.Success(c, announcements)
 }
 
+// KickMember 踢出群成员
+// @Summary 踢出群成员
+// @Description 从群组中踢出指定成员
+// @Tags Group
+// @Accept json
+// @Produce json
+// @Param group_id path int true "群组ID"  // 群组ID
+// @Param data body model.KickMemberRequest true "踢出成员请求数据"  // 踢出成员的数据（成员ID）
+// @Success 200 {object} model.Response "成员成功被踢出"  // 成员踢出成功
+// @Failure 400 {object} model.Response "请求参数错误"  // 参数错误
+// @Failure 500 {object} model.Response "内部服务器错误"  // 服务器错误
+// @Router /group/{group_id}/kick_member [post]
 func (con GroupController) KickMember(c *gin.Context) {
 	var req request.KickMemberRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -288,6 +333,18 @@ func (con GroupController) KickMember(c *gin.Context) {
 	con.Success(c)
 }
 
+// SetAdmin 设置群组管理员
+// @Summary 设置群组管理员
+// @Description 设置指定成员为群组管理员
+// @Tags Group
+// @Accept json
+// @Produce json
+// @Param group_id path int true "群组ID"  // 群组ID
+// @Param data body model.SetAdminRequest true "设置管理员请求数据"  // 设置管理员的数据（成员ID）
+// @Success 200 {object} model.Response "管理员设置成功"  // 管理员设置成功
+// @Failure 400 {object} model.Response "请求参数错误"  // 参数错误
+// @Failure 500 {object} model.Response "内部服务器错误"  // 服务器错误
+// @Router /group/{group_id}/set_admin [post]
 func (con GroupController) SetAdmin(c *gin.Context) {
 	var req request.SetAdminRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -306,6 +363,18 @@ func (con GroupController) SetAdmin(c *gin.Context) {
 	con.Success(c)
 }
 
+// UnsetAdmin 取消群组管理员
+// @Summary 取消群组管理员
+// @Description 取消指定成员的群组管理员身份
+// @Tags Group
+// @Accept json
+// @Produce json
+// @Param group_id path int true "群组ID"  // 群组ID
+// @Param data body model.UnsetAdminRequest true "取消管理员请求数据"  // 取消管理员的数据（成员ID）
+// @Success 200 {object} model.Response "管理员取消成功"  // 管理员取消成功
+// @Failure 400 {object} model.Response "请求参数错误"  // 参数错误
+// @Failure 500 {object} model.Response "内部服务器错误"  // 服务器错误
+// @Router /group/{group_id}/unset_admin [post]
 func (con GroupController) UnsetAdmin(c *gin.Context) {
 	var req request.UnsetAdminRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -324,6 +393,18 @@ func (con GroupController) UnsetAdmin(c *gin.Context) {
 	con.Success(c)
 }
 
+// MuteMember 禁言群成员
+// @Summary 禁言群成员
+// @Description 将指定成员禁言指定时间
+// @Tags Group
+// @Accept json
+// @Produce json
+// @Param group_id path int true "群组ID"  // 群组ID
+// @Param data body model.GroupMemberMuteRequest true "禁言请求数据"  // 禁言请求的数据（成员ID和时长）
+// @Success 200 {object} model.Response "成员禁言成功"  // 禁言成功
+// @Failure 400 {object} model.Response "请求参数错误"  // 参数错误
+// @Failure 500 {object} model.Response "内部服务器错误"  // 服务器错误
+// @Router /group/{group_id}/mute [post]
 func (con GroupController) MuteMember(c *gin.Context) {
 	var req request.GroupMemberMuteRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -343,6 +424,18 @@ func (con GroupController) MuteMember(c *gin.Context) {
 	con.Success(c)
 }
 
+// UnmuteMember 解除禁言
+// @Summary 解除禁言
+// @Description 解除指定成员的禁言
+// @Tags Group
+// @Accept json
+// @Produce json
+// @Param group_id path int true "群组ID"  // 群组ID
+// @Param data body model.UnmuteMemberRequest true "解除禁言请求数据"  // 解除禁言请求的数据（成员ID）
+// @Success 200 {object} model.Response "成员解除禁言成功"  // 解除禁言成功
+// @Failure 400 {object} model.Response "请求参数错误"  // 参数错误
+// @Failure 500 {object} model.Response "内部服务器错误"  // 服务器错误
+// @Router /group/{group_id}/unmute [post]
 func (con GroupController) UnmuteMember(c *gin.Context) {
 	var req request.UnmuteMemberRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -360,6 +453,17 @@ func (con GroupController) UnmuteMember(c *gin.Context) {
 	con.Success(c)
 }
 
+// Dissolve 解散群组
+// @Summary 解散群组
+// @Description 解散指定的群组，群主或管理员可以执行此操作
+// @Tags Group
+// @Accept json
+// @Produce json
+// @Param group_id path int true "群组ID"  // 群组ID
+// @Success 200 {object} model.Response "群组解散成功"  // 群组解散成功
+// @Failure 400 {object} model.Response "请求参数错误"  // 参数错误
+// @Failure 500 {object} model.Response "内部服务器错误"  // 服务器错误
+// @Router /group/{group_id}/dissolve [post]
 func (con GroupController) Dissolve(c *gin.Context) {
 	groupIdStr := c.Param("group_id")
 	groupId, _ := strconv.Atoi(groupIdStr)
@@ -371,6 +475,18 @@ func (con GroupController) Dissolve(c *gin.Context) {
 	con.Success(c)
 }
 
+// Transfer 转让群组所有权
+// @Summary 转让群组所有权
+// @Description 将群组所有权转让给其他成员
+// @Tags Group
+// @Accept json
+// @Produce json
+// @Param group_id path int true "群组ID"  // 群组ID
+// @Param data body request.GroupTransferRequest true "转让请求数据"  // 转让请求的数据（新群主ID）
+// @Success 200 {object} model.Response "群组所有权转让成功"  // 转让成功
+// @Failure 400 {object} model.Response "请求参数错误"  // 参数错误
+// @Failure 500 {object} model.Response "内部服务器错误"  // 服务器错误
+// @Router /group/{group_id}/transfer [post]
 func (con GroupController) Transfer(c *gin.Context) {
 	var req request.GroupTransferRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -387,6 +503,17 @@ func (con GroupController) Transfer(c *gin.Context) {
 	con.Success(c)
 }
 
+// Mute 群组禁言
+// @Summary 群组禁言
+// @Description 将群组成员禁言指定时间
+// @Tags Group
+// @Accept json
+// @Produce json
+// @Param data body model.GroupMuteRequest true "群组禁言请求数据"  // 群组禁言请求的数据（禁言时长等）
+// @Success 200 {object} model.Response "群组禁言成功"  // 群组禁言成功
+// @Failure 400 {object} model.Response "请求参数错误"  // 参数错误
+// @Failure 500 {object} model.Response "内部服务器错误"  // 服务器错误
+// @Router /group/mute [post]
 func (con GroupController) Mute(c *gin.Context) {
 	var req request.GroupMuteRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

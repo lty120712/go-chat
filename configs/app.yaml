@@ -8,16 +8,16 @@ database:
   port: 3306
   dbname: go-chat
 
-redis:
-  host: localhost    # Redis 主机地址
-  port: 6379           # Redis 端口，默认是 6379
-  password: 123456        # Redis 密码，如果没有密码可以留空
-  db: 0                # Redis 数据库索引，默认是 0
-  poolSize: 10        # 连接池大小（默认是 10）
-  minIdleConns: 5    # 最小空闲连接数
-  dialTimeout: 10s    # 连接超时
-  readTimeout: 3s     # 读取超时
-  writeTimeout: 3s    # 写入超时
+#redis:
+#  host: localhost    # Redis 主机地址
+#  port: 6379           # Redis 端口，默认是 6379
+#  password: 123456        # Redis 密码，如果没有密码可以留空
+#  db: 0                # Redis 数据库索引，默认是 0
+#  poolSize: 10        # 连接池大小（默认是 10）
+#  minIdleConns: 5    # 最小空闲连接数
+#  dialTimeout: 10s    # 连接超时
+#  readTimeout: 3s     # 读取超时
+#  writeTimeout: 3s    # 写入超时
 
 api:
   prefix: /api/v1

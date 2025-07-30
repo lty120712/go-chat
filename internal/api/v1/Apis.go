@@ -21,7 +21,6 @@ func InitRouter(r *gin.Engine) {
 func UserApi(r *gin.Engine) {
 	userApi := r.Group(configs.AppConfig.Api.Prefix + "/user")
 	{
-		userApi.GET("/ping", controllers.UserControllerInstance.Ping)
 		userApi.POST("/register", controllers.UserControllerInstance.Register)
 		userApi.POST("/login", controllers.UserControllerInstance.Login)
 		userApi.GET("/logout", middleware.AuthMiddleware(), controllers.UserControllerInstance.Logout)
@@ -34,9 +33,6 @@ func UserApi(r *gin.Engine) {
 func MessageApi(r *gin.Engine) {
 	messageApi := r.Group(configs.AppConfig.Api.Prefix+"/message", middleware.AuthMiddleware())
 	{
-		//测试rabbitmq
-		messageApi.POST("/send/string", controllers.MessageControllerInstance.SendString)
-		messageApi.POST("/send/json", controllers.MessageControllerInstance.SendJson)
 		messageApi.POST("/read", controllers.MessageControllerInstance.Read)
 		messageApi.POST("/query", controllers.MessageControllerInstance.Query)
 		messageApi.GET("/:id/revoke", controllers.MessageControllerInstance.Revoke)

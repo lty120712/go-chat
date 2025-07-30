@@ -191,7 +191,7 @@ func (s GroupService) Mute(userId uint, req request.GroupMuteRequest) error {
 		}
 
 		return s.groupRepository.Update(req.GroupId, map[string]interface{}{
-			"mute_end": req.MuteEnd,
+			"mute_end": time.Unix(req.MuteEnd, 0),
 		})
 	})
 }

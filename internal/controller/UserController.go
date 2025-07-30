@@ -25,20 +25,6 @@ func InitUserController(userService interfacesservice.UserServiceInterface) {
 	}
 }
 
-// Ping 返回一个 ping 的响应，测试接口是否可用
-// @Summary Ping 接口
-// @Description 返回一个简单的 ping 响应，用于检测 API 是否可用
-// @Tags user
-// @Accept json
-// @Produce json
-// @Success 200 {object} model.Response "成功"
-// @Router /user/ping [get]
-func (con UserController) Ping(c *gin.Context) {
-	// 调用服务层获取数据
-	//返回结果
-	con.Success(c, "pong ping ping pang")
-}
-
 // Register 用户注册接口
 // @Summary 用户注册
 // @Description 接口用于用户注册，提供注册所需的字段
@@ -89,6 +75,15 @@ func (con UserController) Login(c *gin.Context) {
 	return
 }
 
+// Logout 用户登出接口
+// @Summary 用户登出
+// @Description 用户登出，清除认证信息
+// @Tags user
+// @Accept json
+// @Produce json
+// @Success 200 {object} model.Response "成功"  // 成功的登出响应
+// @Failure 500 {object} model.Response "登出失败"  // 登出失败
+// @Router /user/logout [get]
 func (con UserController) Logout(c *gin.Context) {
 	id := c.GetUint("id")
 	con.userService.Logout(id)
@@ -96,6 +91,17 @@ func (con UserController) Logout(c *gin.Context) {
 	return
 }
 
+// OnlineStatusChange 用户在线状态变更接口
+// @Summary 用户在线状态变更
+// @Description 修改用户的在线状态（例如：在线、离线、忙碌等）
+// @Tags user
+// @Accept json
+// @Produce json
+// @Param online_status query int true "在线状态"  // 在线状态，必填，0=离线，1=在线，2=忙碌
+// @Success 200 {object} model.Response "成功"  // 在线状态修改成功
+// @Failure 400 {object} model.Response "请求参数错误"  // 请求参数错误
+// @Failure 500 {object} model.Response "在线状态变更失败"  // 状态变更失败
+// @Router /user/online_status_change [get]
 func (con UserController) OnlineStatusChange(c *gin.Context) {
 	id := c.GetUint("id")
 	onlineStatus, _ := strconv.ParseInt(c.Query("online_status"), 10, 64)
@@ -106,9 +112,19 @@ func (con UserController) OnlineStatusChange(c *gin.Context) {
 	con.Success(c)
 }
 
+// GetUserInfo 获取用户信息接口
+// @Summary 获取用户信息
+// @Description 获取当前登录用户的信息
+// @Tags user
+// @Accept json
+// @Produce json
+// @Param id path int true "用户ID"  // ID，作为URL路径参数
+// @Success 200 {object} model.Response "成功"  // 返回当前用户的信息
+// @Failure 500 {object} model.Response "获取用户信息失败"  // 获取用户信息失败
+// @Router /user/info [get]
 func (con UserController) GetUserInfo(c *gin.Context) {
-	id := c.GetUint("id")
-	userInfo, err := con.userService.GetUserInfo(id)
+	id, _ := strconv.ParseUint(c.Query("id"), 10, 64)
+	userInfo, err := con.userService.GetUserInfo(uint(id))
 	if err != nil {
 		con.Error(c, err.Error())
 		return
@@ -118,14 +134,16 @@ func (con UserController) GetUserInfo(c *gin.Context) {
 
 // Update 用户更新信息接口
 // @Summary 更新用户信息
-// @Description 需要登录
-// @security Bearer
+// @Description 更新用户的个人资料，如昵称、头像等
 // @Tags user
 // @Accept json
 // @Produce json
-// @Param body body map[string]interface{} true "用户信息"
-// @Success 200 {string} string "成功"
-// @Failure 401 {string} string "未授权"
+// @security Bearer
+// @Param body body  model.UserUpdateRequest true "用户信息"  // 用户信息，包含昵称、头像等字段
+// @Success 200 {string} string "成功"  // 更新成功的响应
+// @Failure 401 {string} string "未授权"  // 未授权，必须登录后更新
+// @Failure 400 {string} string "请求参数错误"  // 请求参数错误
+// @Failure 500 {string} string "更新失败"  // 更新失败
 // @Router /user/update [post]
 func (con UserController) Update(c *gin.Context) {
 	updateRequest := &request.UserUpdateRequest{}

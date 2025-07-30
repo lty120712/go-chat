@@ -2,9 +2,7 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
-	"go-chat/configs"
 	interfacesservice "go-chat/internal/interfaces/service"
-	"go-chat/internal/manager"
 	request "go-chat/internal/model/request"
 	"strconv"
 )
@@ -23,59 +21,6 @@ func InitMessageController(messageService interfacesservice.MessageServiceInterf
 	MessageControllerInstance = &MessageController{
 		messageService: messageService,
 	}
-}
-
-// SendString 发送消息接口
-// @Summary 发送消息
-// @Description 发送消息到指定队列，消息体为 JSON 格式
-// @Tags Message
-// @Accept json
-// @Produce json
-// @Param msg body map[string]interface{} true "消息内容"
-// @Success 200 {object} model.Response "成功"
-// @Failure 400 {object} model.Response "请求参数错误"
-// @Failure 500 {object} model.Response "发送消息失败"
-// @Router /message/send/string [post]
-func (con MessageController) SendString(c *gin.Context) {
-	var req map[string]interface{}
-	if err := c.ShouldBindJSON(&req); err != nil {
-		con.Error(c, "参数错误")
-	}
-	msg := req["msg"]
-	// 发送消息
-	chatMq := configs.AppConfig.Mq[0]
-	err := manager.RabbitClient.SendMessage(chatMq.Exchange, chatMq.RoutingKey, msg)
-	if err != nil {
-		con.Error(c, "发送消息失败")
-		return
-	}
-	con.Success(c, req)
-}
-
-// SendJson 发送消息接口
-// @Summary 发送消息
-// @Description 发送消息到指定队列，消息体为 JSON 格式
-// @Tags Message
-// @Accept json
-// @Produce json
-// @Param msg body map[string]interface{} true "消息内容"
-// @Success 200 {object} model.Response "成功"
-// @Failure 400 {object} model.Response "请求参数错误"
-// @Failure 500 {object} model.Response "发送消息失败"
-// @Router /message/send/json [post]
-func (con MessageController) SendJson(c *gin.Context) {
-	var req map[string]interface{}
-	if err := c.ShouldBindJSON(&req); err != nil {
-		con.Error(c, "参数错误")
-	}
-	// 发送消息
-	chatMq := configs.AppConfig.Mq[0]
-	err := manager.RabbitClient.SendMessage(chatMq.Exchange, chatMq.RoutingKey, req)
-	if err != nil {
-		con.Error(c, "发送消息失败")
-		return
-	}
-	con.Success(c, req)
 }
 
 // SendJson 已读消息接口
@@ -129,6 +74,16 @@ func (con MessageController) Query(c *gin.Context) {
 	}
 }
 
+// Revoke 撤回消息接口
+// @Summary 撤回消息
+// @Description 根据消息ID撤回指定消息，只有发送者或管理员才能撤回消息
+// @Tags Message
+// @Accept json
+// @Produce json
+// @Param id path int true "消息ID"  // 消息ID，作为URL路径参数
+// @Success 200 {object} model.Response "成功"  // 成功的撤回响应
+// @Failure 500 {object} model.Response "撤回失败"  // 撤回消息失败
+// @Router /message/{id}/revoke [get]
 func (con MessageController) Revoke(c *gin.Context) {
 	messageIdStr := c.Param("id")
 	messageId, _ := strconv.Atoi(messageIdStr)
